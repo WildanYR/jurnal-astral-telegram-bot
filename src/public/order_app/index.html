@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pendaftaran Kegiatan</title>
+    <link rel="stylesheet" href="/order_app/style.css" />
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
+  </head>
+  <body x-data="order">
+    <div class="flex flex-col items-center justify-start min-h-screen">
+      <div
+        class="flex flex-col flex-1 w-full gap-4 p-5 lg:max-w-sm lg:shadow-lg"
+      >
+        <template x-if="!!error_header">
+          <div class="w-full px-3 py-2 bg-red-600">
+            <p x-text="error_header" class="text-center text-white"></p>
+          </div>
+        </template>
+        <template x-if="state === 'load'">
+          <div class="flex flex-col items-center justify-center">
+            <svg
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="currentColor"
+              class="text-blue-500 w-14 h-14 animate-spin"
+            >
+              <path
+                d="M10.72,19.9a8,8,0,0,1-6.5-9.79A7.77,7.77,0,0,1,10.4,4.16a8,8,0,0,1,9.49,6.52A1.54,1.54,0,0,0,21.38,12h.13a1.37,1.37,0,0,0,1.38-1.54,11,11,0,1,0-12.7,12.39A1.54,1.54,0,0,0,12,21.34h0A1.47,1.47,0,0,0,10.72,19.9Z"
+              />
+            </svg>
+            <p class="text-lg text-gray-500">loading</p>
+          </div>
+        </template>
+        <template x-if="state === 'register'">
+          <div>
+            <h1
+              x-text="order.title"
+              class="text-2xl font-bold text-center"
+            ></h1>
+            <div class="mt-5 space-y-5">
+              <!-- Input Container -->
+              <div class="space-y-5">
+                <template x-for="(input, i) in participant.names" :key="i">
+                  <!-- Input -->
+                  <div>
+                    <p
+                      x-text="'Nama Peserta ' + (i+1)"
+                      class="mb-1 text-sm"
+                    ></p>
+                    <input
+                      x-model="participant.names[i]"
+                      type="text"
+                      placeholder="Masukkan nama..."
+                      class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md outline-none focus:border-blue-500"
+                    />
+                  </div>
+                </template>
+              </div>
+
+              <template x-if="participant.count > 1">
+                <button
+                  x-on:click="removeParticipant"
+                  class="flex items-center justify-center w-full px-3 py-2 text-sm text-red-500 border border-red-300 border-dashed rounded-md hover:bg-red-100"
+                >
+                  <span>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      class="w-4 h-4"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M4.25 12a.75.75 0 0 1 .75-.75h14a.75.75 0 0 1 0 1.5H5a.75.75 0 0 1-.75-.75Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </span>
+
+                  Kurangi Peserta
+                </button>
+              </template>
+
+              <button
+                x-on:click="addNewParticipant"
+                class="flex items-center justify-center w-full px-3 py-2 text-sm text-gray-500 border border-gray-300 border-dashed rounded-md hover:bg-gray-200"
+              >
+                <span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    class="w-4 h-4"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M12 4.5v15m7.5-7.5h-15"
+                    />
+                  </svg>
+                </span>
+
+                Tambah Peserta
+              </button>
+
+              <button
+                x-on:click="submit"
+                class="flex items-center justify-center w-full gap-2 px-3 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700"
+              >
+                <span x-show="loadingSubmit" id="submit-btn-loading">
+                  <svg
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="currentColor"
+                    class="w-4 h-4 animate-spin"
+                  >
+                    <path
+                      d="M10.72,19.9a8,8,0,0,1-6.5-9.79A7.77,7.77,0,0,1,10.4,4.16a8,8,0,0,1,9.49,6.52A1.54,1.54,0,0,0,21.38,12h.13a1.37,1.37,0,0,0,1.38-1.54,11,11,0,1,0-12.7,12.39A1.54,1.54,0,0,0,12,21.34h0A1.47,1.47,0,0,0,10.72,19.9Z"
+                    />
+                  </svg>
+                </span>
+                Submit
+              </button>
+
+              <template x-if="!!error">
+                <div id="error">
+                  <p class="mb-2 text-2xl font-bold text-center text-red-800">
+                    Error
+                  </p>
+                  <textarea
+                    x-model="error"
+                    id="error-text"
+                    readonly
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    rows="5"
+                  ></textarea>
+                </div>
+              </template>
+            </div>
+          </div>
+        </template>
+        <template x-if="state === 'success'">
+          <div>
+            <p
+              class="w-full px-3 py-2 text-2xl font-medium text-center text-white bg-green-700 rounded-md"
+            >
+              Pendaftaran Berhasil
+            </p>
+          </div>
+        </template>
+        <template x-if="state === 'noid'">
+          <div>
+            <p
+              class="w-full px-3 py-2 text-2xl font-medium text-center text-white bg-red-700 rounded-md"
+            >
+              ID INVALID ERROR
+            </p>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <script src="/order_app/index.js"></script>
+  </body>
+</html>
