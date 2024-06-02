@@ -1,8 +1,8 @@
 export const databaseConfig = {
-  username: process.env.DATABASE_USERNAME || "root",
+  username: process.env.DATABASE_USERNAME || "",
   password: process.env.DATABASE_PASSWORD || "",
-  host: process.env.DATABASE_HOST || "localhost",
-  port: parseInt(process.env.DATABASE_PORT as string) || 3306,
-  dbname: process.env.DATABASE_DBNAME || "jurnal_astral_bot",
+  host: process.env.DATABASE_HOST || "",
+  port: parseInt(process.env.DATABASE_PORT as string),
+  dbname: process.env.DATABASE_DBNAME || "",
   dialect: "mysql",
 };
