@@ -3,6 +3,7 @@ import { glosariumConst } from "../constants/glosarium.const";
 import { Glosarium } from "../databases/models/glosarium.model";
 import TelegramBot from "node-telegram-bot-api";
 import { telegramConfig } from "../configs/telegram.config";
+import { databaseConfig } from "../configs/database.config";
 
 export const getGlosariumWithPagination = async (
   page: number,
@@ -13,7 +14,11 @@ export const getGlosariumWithPagination = async (
   let condition: any = {};
 
   if (wordFilter) {
-    condition.word = { [Op.like]: `${wordFilter}%` };
+    if (databaseConfig.dialect === "postgres") {
+      condition.word = { [Op.iLike]: `${wordFilter}%` };
+    } else {
+      condition.word = { [Op.like]: `${wordFilter}%` };
+    }
   }
 
   const glosarium = await Glosarium.findAndCountAll({
