@@ -4,5 +4,5 @@ export const databaseConfig = {
   host: process.env.DATABASE_HOST || "",
   port: parseInt(process.env.DATABASE_PORT as string),
   dbname: process.env.DATABASE_DBNAME || "",
-  dialect: "mysql",
+  dialect: process.env.DATABASE_DIALECT || "mysql",
 };
