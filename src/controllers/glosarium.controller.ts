@@ -53,9 +53,10 @@ export const getGlosariumMeaning = async (ids: number[]) => {
   return { glosarium };
 };
 
-export const getGlosariumLink = async (bot: TelegramBot, chat_id: number) => {
+export const getGlosariumLink = async (bot: TelegramBot, chat_id: number, chat_thread_id?: number) => {
   await bot.sendMessage(
     chat_id,
-    `${telegramConfig.uri}/${glosariumConst.webAppName}`
+    `${telegramConfig.uri}/${glosariumConst.webAppName}`,
+    {message_thread_id: chat_thread_id}
   );
 };

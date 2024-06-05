@@ -1,8 +1,14 @@
 import TelegramBot from "node-telegram-bot-api";
-import { startCommandHandle } from "../controllers/start.controller";
+import { cancelCommandHandle, startCommandHandle } from "../controllers/start.controller";
 
 export const initStartHandler = (bot: TelegramBot) => {
   bot.onText(/\/start/, async (msg) => {
+    if (msg.chat.type !== 'private') return
+
     await startCommandHandle(bot, msg.chat.id, msg.from!.id);
+  });
+
+  bot.onText(/\/cancel/, async (msg) => {
+    await cancelCommandHandle(bot, msg.chat.id, msg.from!.id);
   });
 };

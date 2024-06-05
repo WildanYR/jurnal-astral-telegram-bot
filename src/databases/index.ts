@@ -5,6 +5,7 @@ import { Order } from "./models/order.model";
 import { OrderList } from "./models/order_list.model";
 import { Glosarium } from "./models/glosarium.model";
 import { OrderChatUpdate } from "./models/order_chat_update.model";
+import { AuthorizeUser } from "./models/authorize_user.model";
 
 export let sequelize: Sequelize;
 
@@ -49,6 +50,10 @@ export const initDatabase = () => {
   });
   Glosarium.init(Glosarium.getModelAttributes(), {
     ...Glosarium.getInitOptions(),
+    sequelize,
+  });
+  AuthorizeUser.init(AuthorizeUser.getModelAttributes(), {
+    ...AuthorizeUser.getInitOptions(),
     sequelize,
   });
 

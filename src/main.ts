@@ -18,6 +18,7 @@ import { initCallbackQueryHandler } from "./handlers/callback_query.handler";
 import { initOrderRouter } from "./routes/order.route";
 import { initOrderHandler } from "./handlers/order.handler";
 import { initGlosariumHandler } from "./handlers/glosarium.handler";
+import { initAuthHandler } from "./handlers/auth.handler";
 
 async function main() {
   if (
@@ -74,6 +75,7 @@ async function main() {
   initStartHandler(telegramBot);
   initOrderHandler(telegramBot);
   initGlosariumHandler(telegramBot);
+  initAuthHandler(telegramBot);
 
   console.log(`App Ready, Listening on port ${appConfig.port}`)
 }

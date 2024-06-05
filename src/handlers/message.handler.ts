@@ -3,6 +3,8 @@ import { getChatInstance } from "../utils/chat_instance.util";
 import { appConfig } from "../configs/app.config";
 import { orderConst } from "../constants/order.const";
 import { orderCreateSetTitle } from "../controllers/order.controller";
+import { authConst } from "../constants/auth.const";
+import { authValidate } from "../controllers/auth.controller";
 
 export const initMessageHandler = (bot: TelegramBot) => {
   bot.on("message", async (msg) => {
@@ -22,6 +24,10 @@ export const initMessageHandler = (bot: TelegramBot) => {
 
       if (chatInstance.state === orderConst.state.GET_TITLE) {
         await orderCreateSetTitle(bot, chat_id, user_id, msg.text!);
+      }
+
+      if (chatInstance.state === authConst.state.GET_TOKEN) {
+        await authValidate(bot, chat_id, user_id, msg.text!)
       }
     }
   });

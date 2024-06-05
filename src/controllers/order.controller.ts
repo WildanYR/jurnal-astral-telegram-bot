@@ -73,7 +73,7 @@ export const orderCreateSetTitle = async (
     await orderAddResultListener(bot, chat_id, order.id);
 
     await transaction.commit();
-  } catch (error) {
+  } catch (error: any) {
     await transaction.rollback();
     console.error(error);
   }
@@ -157,7 +157,11 @@ export const orderAddResultListener = async (
   if (orderChatUpdate) {
     await bot.sendMessage(chat_id, '<strong>Hasil akan otomatis di update setiap ada yang mendaftar</strong>', {parse_mode: 'HTML', message_thread_id: chat_thread_id})
     if (command_message_id) {
-      await bot.deleteMessage(chat_id, command_message_id)
+      try {
+        await bot.deleteMessage(chat_id, command_message_id)
+      } catch (error: any) {
+        console.log('Error ', error.toString())
+      }
     }
     return
   }
@@ -177,7 +181,11 @@ export const orderAddResultListener = async (
     previous_message_id: resultMsgId,
   });
   if (command_message_id) {
-    await bot.deleteMessage(chat_id, command_message_id)
+    try {
+      await bot.deleteMessage(chat_id, command_message_id)
+    } catch (error: any) {
+      console.log('Error ', error.toString())
+    }
   }
 };
 
@@ -206,7 +214,11 @@ export const orderListAdd = async (data: ICreateOrderList[], bot: TelegramBot) =
         { parse_mode: "HTML", message_thread_id: update.chat_thread_id }
       );
       if (update.previous_message_id) {
-        await bot.deleteMessage(update.chat_id, update.previous_message_id)
+        try {
+          await bot.deleteMessage(update.chat_id, update.previous_message_id)
+        } catch (error: any) {
+          console.log('Error ', error.toString())
+        }
       }
       await update.update({'previous_message_id': lastMsg.message_id})
     }
@@ -241,7 +253,11 @@ export const orderStopResultListener = async (
   }
 
   if (command_message_id) {
-    await bot.deleteMessage(chat_id, command_message_id)
+    try {
+      await bot.deleteMessage(chat_id, command_message_id)
+    } catch (error: any) {
+      console.log('Error ', error.toString())
+    }
   }
 
 }
