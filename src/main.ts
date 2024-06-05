@@ -15,11 +15,11 @@ import { glosariumRouter } from "./routes/glosarium.route";
 import { initStartHandler } from "./handlers/start.handler";
 import { initMessageHandler } from "./handlers/message.handler";
 import { initCallbackQueryHandler } from "./handlers/callback_query.handler";
-import { orderRouter } from "./routes/order.route";
+import { initOrderRouter } from "./routes/order.route";
 import { initOrderHandler } from "./handlers/order.handler";
 import { initGlosariumHandler } from "./handlers/glosarium.handler";
 
-function main() {
+async function main() {
   if (
     !databaseConfig.username ||
     !databaseConfig.password ||
@@ -44,7 +44,7 @@ function main() {
 
   const telegramBot = new TelegramBot(telegramConfig.token);
   const telegramUpdateRoute = `/bot${telegramConfig.token}`;
-  telegramBot.setWebHook(`${telegramConfig.webhook_uri}${telegramUpdateRoute}`);
+  await telegramBot.setWebHook(`${telegramConfig.webhook_uri}${telegramUpdateRoute}`);
 
   const app = express();
 
@@ -63,6 +63,8 @@ function main() {
   });
 
   app.use("/glosarium", glosariumRouter);
+
+  const orderRouter = initOrderRouter(telegramBot)
   app.use("/order", orderRouter);
 
   app.listen(appConfig.port);
@@ -72,6 +74,8 @@ function main() {
   initStartHandler(telegramBot);
   initOrderHandler(telegramBot);
   initGlosariumHandler(telegramBot);
+
+  console.log(`App Ready, Listening on port ${appConfig.port}`)
 }
 
 main();

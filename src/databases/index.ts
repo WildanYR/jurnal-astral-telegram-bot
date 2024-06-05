@@ -4,6 +4,7 @@ import { ChatInstance } from "./models/chat_instance.model";
 import { Order } from "./models/order.model";
 import { OrderList } from "./models/order_list.model";
 import { Glosarium } from "./models/glosarium.model";
+import { OrderChatUpdate } from "./models/order_chat_update.model";
 
 export let sequelize: Sequelize;
 
@@ -42,6 +43,10 @@ export const initDatabase = () => {
     ...OrderList.getInitOptions(),
     sequelize,
   });
+  OrderChatUpdate.init(OrderChatUpdate.getModelAttributes(), {
+    ...OrderChatUpdate.getInitOptions(),
+    sequelize,
+  });
   Glosarium.init(Glosarium.getModelAttributes(), {
     ...Glosarium.getInitOptions(),
     sequelize,
@@ -50,4 +55,5 @@ export const initDatabase = () => {
   /** Load Model Association */
   Order.association();
   OrderList.association();
+  OrderChatUpdate.association();
 };

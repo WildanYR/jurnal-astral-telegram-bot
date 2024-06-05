@@ -6,6 +6,7 @@ import {
   Optional,
 } from "sequelize";
 import { OrderList } from "./order_list.model";
+import { OrderChatUpdate } from "./order_chat_update.model";
 
 interface IOrderAttributes {
   id: number;
@@ -45,6 +46,10 @@ export class Order extends Model<IOrderAttributes, ICreateOrderAttributes> {
       foreignKey: "order_id",
       as: "order_list",
     });
+    Order.hasMany(OrderChatUpdate, {
+      foreignKey: "order_id",
+      as: "order_chat_update",
+    });
   }
 
   declare id: number;
@@ -53,4 +58,5 @@ export class Order extends Model<IOrderAttributes, ICreateOrderAttributes> {
   declare updated_at: Date;
 
   declare order_list: OrderList[];
+  declare order_chat_update: OrderChatUpdate[];
 }

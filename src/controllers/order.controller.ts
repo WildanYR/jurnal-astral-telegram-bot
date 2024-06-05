@@ -8,6 +8,9 @@ import { sequelize } from "../databases";
 import { botConst } from "../constants/bot.const";
 import { encodeText } from "../utils/text.util";
 import { telegramConfig } from "../configs/telegram.config";
+import { OrderChatUpdate } from "../databases/models/order_chat_update.model";
+
+let timer_id: NodeJS.Timeout
 
 const getOrderAppLink = (order_id: number, title: string) => {
   const payload = encodeText(`${order_id}|${title}`);
@@ -61,13 +64,13 @@ export const orderCreateSetTitle = async (
 
     await bot.sendMessage(
       chat_id,
-      `Hasil List dapat dilihat dengan command\n\n<code>/orderresult ${
-        order.id
-      }</code>\n\natau dengan link dibawah\n\n${
+      `<strong>Hasil akan otomatis di update setiap ada yang mendaftar</strong>\n\nshare dengan link dibawah\n\n${
         telegramConfig.uri
       }?text=${encodeURIComponent(`/orderresult ${order.id}`)}`,
       { parse_mode: "HTML" }
     );
+
+    await orderAddResultListener(bot, chat_id, order.id);
 
     await transaction.commit();
   } catch (error) {
@@ -76,23 +79,14 @@ export const orderCreateSetTitle = async (
   }
 };
 
-export const orderGetResult = async (
-  bot: TelegramBot,
-  chat_id: number,
-  order_id?: number
-) => {
-  if (!order_id) {
-    await bot.sendMessage(chat_id, "Order Id Invalid");
-  }
-
+export const orderGetResultText = async (order_id: number) => {
   const order = await Order.findOne({
     where: { id: order_id },
     include: [{ model: OrderList, as: "order_list" }],
   });
 
   if (!order) {
-    await bot.sendMessage(chat_id, "List tidak ditemukan");
-    return;
+    return '';
   }
 
   const timeStr = new Date()
@@ -108,13 +102,146 @@ export const orderGetResult = async (
   }
 
   const orderAppLink = getOrderAppLink(order.id, order.name);
-  await bot.sendMessage(
+  return `${order_list_text}\n\nLink Pendaftaran:\n${orderAppLink}`
+}
+
+export const orderGetResult = async (
+  bot: TelegramBot,
+  chat_id: number,
+  order_id?: number,
+  chat_thread_id?: number
+) => {
+  if (!order_id) {
+    await bot.sendMessage(chat_id, "Order Id Invalid", {
+      message_thread_id: chat_thread_id,
+    });
+    return
+  }
+
+  const orderResultText = await orderGetResultText(order_id);
+  if (!orderResultText) {
+    await bot.sendMessage(chat_id, "List tidak ditemukan", {
+      message_thread_id: chat_thread_id,
+    });
+    return;
+  }
+
+  const listMsg = await bot.sendMessage(
     chat_id,
-    `${order_list_text}\n\nLink Pendaftaran:\n${orderAppLink}`,
-    { parse_mode: "HTML" }
+    orderResultText,
+    { parse_mode: "HTML", message_thread_id: chat_thread_id }
   );
+  return listMsg.message_id;
 };
 
-export const orderListAdd = async (data: ICreateOrderList[]) => {
-  await OrderList.bulkCreate(data);
+export const orderAddResultListener = async (
+  bot: TelegramBot,
+  chat_id: number,
+  order_id?: number,
+  chat_thread_id?: number,
+  command_message_id?: number
+) => {
+  if (!order_id) {
+    await bot.sendMessage(chat_id, "Order Id Invalid", {
+      message_thread_id: chat_thread_id,
+    });
+    return
+  }
+
+  let condition: any = {chat_id, order_id}
+  if (chat_thread_id) {
+    condition.chat_thread_id = chat_thread_id
+  }
+
+  const orderChatUpdate = await OrderChatUpdate.findOne({where: condition})
+  if (orderChatUpdate) {
+    await bot.sendMessage(chat_id, '<strong>Hasil akan otomatis di update setiap ada yang mendaftar</strong>', {parse_mode: 'HTML', message_thread_id: chat_thread_id})
+    if (command_message_id) {
+      await bot.deleteMessage(chat_id, command_message_id)
+    }
+    return
+  }
+
+  await bot.sendMessage(chat_id, '<strong>Hasil akan otomatis di update setiap ada yang mendaftar</strong>', {parse_mode: 'HTML', message_thread_id: chat_thread_id})
+
+  const resultMsgId = await orderGetResult(
+    bot,
+    chat_id,
+    order_id,
+    chat_thread_id
+  );
+  await OrderChatUpdate.create({
+    chat_id,
+    order_id,
+    chat_thread_id,
+    previous_message_id: resultMsgId,
+  });
+  if (command_message_id) {
+    await bot.deleteMessage(chat_id, command_message_id)
+  }
 };
+
+export const orderListAdd = async (data: ICreateOrderList[], bot: TelegramBot) => {
+  if (!data.length) return
+
+  await OrderList.bulkCreate(data);
+
+  const order_id = data[0].order_id
+
+  if (timer_id) clearTimeout(timer_id);
+
+  timer_id = setTimeout(async () => {
+    const orderUpdate = await OrderChatUpdate.findAll({where: {order_id}})
+
+    if (!orderUpdate.length) return
+
+    const orderResultText = await orderGetResultText(order_id)
+
+    if (!orderResultText) return
+
+    for (const update of orderUpdate) {
+      const lastMsg = await bot.sendMessage(
+        update.chat_id,
+        orderResultText,
+        { parse_mode: "HTML", message_thread_id: update.chat_thread_id }
+      );
+      if (update.previous_message_id) {
+        await bot.deleteMessage(update.chat_id, update.previous_message_id)
+      }
+      await update.update({'previous_message_id': lastMsg.message_id})
+    }
+
+  }, 60000)
+};
+
+export const orderStopResultListener = async (
+  bot: TelegramBot,
+  chat_id: number,
+  order_id?: number,
+  chat_thread_id?: number,
+  command_message_id?: number
+) => {
+  if (!order_id) {
+    await bot.sendMessage(chat_id, "Order Id Invalid", {
+      message_thread_id: chat_thread_id,
+    });
+    return
+  }
+
+  let condition: any = {chat_id, order_id}
+  if (chat_thread_id) {
+    condition.chat_thread_id = chat_thread_id
+  }
+
+  const orderChatUpdate = await OrderChatUpdate.findOne({where: condition})
+
+  if (orderChatUpdate) {
+    await orderChatUpdate.destroy()
+    await bot.sendMessage(chat_id, 'Pendaftaran selesai ditampilkan secara langsung', {message_thread_id: chat_thread_id})
+  }
+
+  if (command_message_id) {
+    await bot.deleteMessage(chat_id, command_message_id)
+  }
+
+}
