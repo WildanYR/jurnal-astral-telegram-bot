@@ -64,9 +64,7 @@ export const orderCreateSetTitle = async (
 
     await bot.sendMessage(
       chat_id,
-      `<strong>Hasil akan otomatis di update setiap ada yang mendaftar</strong>\n\nshare dengan link dibawah\n\n${
-        telegramConfig.uri
-      }?text=${encodeURIComponent(`/orderresult ${order.id}`)}`,
+      `Anda dapat membagikan hasil list dengan command\n\n<strong>Data List Terbaru</strong>\n/orderresult_${order.id}\n/orderresult_${order.id}@${telegramConfig.username} untuk grup\n\n<strong>Auto Update Data</strong>\n/orderresultrt_${order.id}\n/orderresultrt_${order.id}@${telegramConfig.username} untuk grup`,
       { parse_mode: "HTML" }
     );
 

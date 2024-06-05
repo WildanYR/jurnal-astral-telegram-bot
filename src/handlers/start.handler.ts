@@ -9,6 +9,8 @@ export const initStartHandler = (bot: TelegramBot) => {
   });
 
   bot.onText(/\/cancel/, async (msg) => {
+    if (msg.chat.type !== 'private') return
+    
     await cancelCommandHandle(bot, msg.chat.id, msg.from!.id);
   });
 };
