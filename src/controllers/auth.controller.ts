@@ -12,7 +12,7 @@ export const authInit = async (bot: TelegramBot, chat_id: number, user_id: numbe
 
 export const authValidate = async (bot: TelegramBot, chat_id: number, user_id: number, token: string) => {
   if (token !== appConfig.token) {
-    await bot.sendMessage(chat_id, 'Login Gagal, Token Invalid')
+    await bot.sendMessage(chat_id, 'Login Gagal, Token Invalid\n\n/cancel untuk membatalkan')
     return
   }
   

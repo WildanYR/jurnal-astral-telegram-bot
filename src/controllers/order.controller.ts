@@ -22,7 +22,7 @@ export const orderCreateInit = async (
   chat_id: number,
   user_id: number
 ) => {
-  await bot.sendMessage(chat_id, "Masukkan Judul List:");
+  await bot.sendMessage(chat_id, "Masukkan Nama Kegiatan:\nmisal: Dragon Ring 01 Januari 1999");
   await setChatInstanceState(chat_id, user_id, orderConst.state.GET_TITLE);
 };
 
@@ -64,7 +64,7 @@ export const orderCreateSetTitle = async (
 
     await bot.sendMessage(
       chat_id,
-      `Anda dapat membagikan hasil list dengan command\n\n<strong>Data List Terbaru</strong>\n/orderresult_${order.id}\n/orderresult_${order.id}@${telegramConfig.username} untuk grup\n\n<strong>Auto Update Data</strong>\n/orderresultrt_${order.id}\n/orderresultrt_${order.id}@${telegramConfig.username} untuk grup`,
+      `Anda dapat membagikan hasil list dengan command\n\n<strong>Data List Terbaru</strong>\n<code>/orderresult_${order.id}</code>\n<code>/orderresult_${order.id}@${telegramConfig.username}</code> untuk grup\n\n<strong>Auto Update Data</strong>\n<code>/orderresultrt_${order.id}</code>\n<code>/orderresultrt_${order.id}@${telegramConfig.username}</code> untuk grup\n\nNote kirim ke grup:\n- bot harus menjadi member dari grup\n- Hanya yang sudah login sebagai Admin dari bot ini /auth yang bisa mengirim ke grup`,
       { parse_mode: "HTML" }
     );
 
@@ -94,9 +94,13 @@ export const orderGetResultText = async (order_id: number) => {
   let order_list_text = `<blockquote>update ${timeStr} WIB</blockquote>\n<strong>Daftar Peserta ${order.name}</strong>\n\n`;
   let count = 1;
 
-  for (const list of order.order_list) {
-    order_list_text += `${count}. ${list.value}\n`;
-    count++;
+  if (order.order_list.length) {
+    for (const list of order.order_list) {
+      order_list_text += `${count}. ${list.value}\n`;
+      count++;
+    }
+  } else {
+    order_list_text += '<i>Belum Ada Peserta</i>'
   }
 
   const orderAppLink = getOrderAppLink(order.id, order.name);

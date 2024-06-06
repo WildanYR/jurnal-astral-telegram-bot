@@ -23,7 +23,7 @@ export const startCommandHandle = async (
         ],
         [
           {
-            text: "Buat List Peserta Kegiatan",
+            text: "Buat Presensi Kegiatan",
             callback_data: `${orderConst.callbackData.CREATE};${chat_id};${user_id}`,
           },
         ],
