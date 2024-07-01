@@ -35,7 +35,6 @@ document.addEventListener("alpine:init", () => {
           window.Telegram.WebApp.initDataUnsafe.start_param
         ).split("|");
         this.order.id = parseInt(param[0]);
-        this.order.title = param[1];
         this.user.id = window.Telegram.WebApp.initDataUnsafe.user.id || null;
         this.user.name = window.Telegram.WebApp.initDataUnsafe.user
           ? `${window.Telegram.WebApp.initDataUnsafe.user.first_name} ${window.Telegram.WebApp.initDataUnsafe.user.last_name}`.trim()
@@ -45,17 +44,32 @@ document.addEventListener("alpine:init", () => {
       } else {
         const urlParams = new URLSearchParams(window.location.search);
         this.order.id = parseInt(urlParams.get("id")) || null;
-        this.order.title = urlParams.get("title") || null;
         this.user.id = parseInt(urlParams.get("user_id")) || null;
         this.user.name = urlParams.get("user_name") || null;
         this.user.username = urlParams.get("user_username") || null;
       }
 
-      if (!this.order.id || !this.order.title) {
+      if (!this.order.id) {
         this.state = "noid";
-      } else {
-        this.state = "register";
+        return;
       }
+
+      fetch(`/order/${this.order.id}/title`)
+        .then((response) => {
+          return response.json();
+        })
+        .then((data) => {
+          if (data.error) {
+            this.state = "noid";
+          } else {
+            this.order.title = data.title;
+            this.state = "register";
+          }
+        })
+        .catch((error) => {
+          console.error(error);
+          this.state = "noid";
+        });
     },
 
     addNewParticipant() {

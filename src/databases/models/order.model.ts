@@ -11,6 +11,7 @@ import { OrderChatUpdate } from "./order_chat_update.model";
 interface IOrderAttributes {
   id: number;
   name: string;
+  description?: string;
 }
 
 interface ICreateOrderAttributes extends Optional<IOrderAttributes, "id"> {}
@@ -30,6 +31,9 @@ export class Order extends Model<IOrderAttributes, ICreateOrderAttributes> {
       name: {
         type: DataTypes.STRING,
         allowNull: false,
+      },
+      description: {
+        type: DataTypes.STRING,
       },
     };
   }
@@ -54,6 +58,7 @@ export class Order extends Model<IOrderAttributes, ICreateOrderAttributes> {
 
   declare id: number;
   declare name: string;
+  declare description: string;
   declare created_at: Date;
   declare updated_at: Date;
 

@@ -12,6 +12,7 @@ interface IChatInstanceAttributes {
   user_id: number;
   authorize: boolean;
   state?: string;
+  metadata?: string;
 }
 
 interface ICreateChatInstanceAttributes
@@ -48,6 +49,9 @@ export class ChatInstance extends Model<
       state: {
         type: DataTypes.STRING,
       },
+      metadata: {
+        type: DataTypes.STRING,
+      },
     };
   }
 
@@ -63,6 +67,7 @@ export class ChatInstance extends Model<
   declare user_id: number;
   declare authorize: boolean;
   declare state: string;
+  declare metadata: string;
   declare created_at: Date;
   declare updated_at: Date;
 }

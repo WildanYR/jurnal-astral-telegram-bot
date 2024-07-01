@@ -2,7 +2,10 @@ import TelegramBot from "node-telegram-bot-api";
 import { getChatInstance } from "../utils/chat_instance.util";
 import { appConfig } from "../configs/app.config";
 import { orderConst } from "../constants/order.const";
-import { orderCreateSetTitle } from "../controllers/order.controller";
+import {
+  orderCreateSetDesc,
+  orderCreateSetTitle,
+} from "../controllers/order.controller";
 import { authConst } from "../constants/auth.const";
 import { authValidate } from "../controllers/auth.controller";
 
@@ -22,12 +25,16 @@ export const initMessageHandler = (bot: TelegramBot) => {
       const user_id = msg.from.id;
       const chatInstance = await getChatInstance(chat_id, user_id);
 
+      if (chatInstance.state === authConst.state.GET_TOKEN) {
+        await authValidate(bot, chat_id, user_id, msg.text!);
+      }
+
       if (chatInstance.state === orderConst.state.GET_TITLE) {
         await orderCreateSetTitle(bot, chat_id, user_id, msg.text!);
       }
 
-      if (chatInstance.state === authConst.state.GET_TOKEN) {
-        await authValidate(bot, chat_id, user_id, msg.text!)
+      if (chatInstance.state === orderConst.state.GET_DESCRIPTION) {
+        await orderCreateSetDesc(bot, chat_id, user_id, msg.text!);
       }
     }
   });

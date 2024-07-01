@@ -2,14 +2,19 @@ import { Transaction } from "sequelize";
 import { botConst } from "../constants/bot.const";
 import { ChatInstance } from "../databases/models/chat_instance.model";
 
+interface IChatInstanceOption {
+  transaction?: Transaction;
+  metadata?: string;
+}
+
 export const getChatInstance = async (
   chat_id: number,
   user_id: number,
-  transaction?: Transaction
+  options?: IChatInstanceOption
 ) => {
   const chatInstance = await ChatInstance.findOne({
     where: { chat_id, user_id },
-    transaction,
+    transaction: options?.transaction,
   });
 
   if (!chatInstance) {
@@ -20,7 +25,7 @@ export const getChatInstance = async (
         authorize: false,
         state: botConst.state.START,
       },
-      { transaction }
+      { transaction: options?.transaction }
     );
     return newChatInstance;
   }
@@ -32,10 +37,10 @@ export const setChatInstanceState = async (
   chat_id: number,
   user_id: number,
   state: string,
-  transaction?: Transaction
+  options?: IChatInstanceOption
 ) => {
   await ChatInstance.update(
-    { state },
-    { where: { chat_id, user_id }, transaction }
+    { state, metadata: options?.metadata },
+    { where: { chat_id, user_id }, transaction: options?.transaction }
   );
 };
