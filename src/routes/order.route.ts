@@ -1,6 +1,11 @@
 import { Router } from "express";
 import path from "path";
-import { orderGetTitle, orderListAdd } from "../controllers/order.controller";
+import {
+  orderGetTitle,
+  orderListAdd,
+  orderUserGetData,
+  orderUserUpdateData,
+} from "../controllers/order.controller";
 import TelegramBot from "node-telegram-bot-api";
 
 export const initOrderRouter = (bot: TelegramBot) => {
@@ -23,8 +28,21 @@ export const initOrderRouter = (bot: TelegramBot) => {
     res.json(order);
   });
 
+  router.get("/:id/list/:userId", async (req, res) => {
+    const orders = await orderUserGetData(
+      parseInt(req.params.id),
+      parseInt(req.params.userId)
+    );
+    res.json(orders);
+  });
+
   router.post("/", async (req, res) => {
     await orderListAdd(req.body.data, bot);
+    res.json({ status: "OK", message: "ok" });
+  });
+
+  router.post("/:id", async (req, res) => {
+    await orderUserUpdateData(bot, parseInt(req.params.id), req.body);
     res.json({ status: "OK", message: "ok" });
   });
 

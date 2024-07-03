@@ -16,10 +16,8 @@ document.addEventListener("alpine:init", () => {
       id: "",
       title: "",
     },
-    participant: {
-      count: 1,
-      names: [""],
-    },
+    participant: [{ id: null, value: "", status: "add" }],
+    participantDelId: [],
     user: {
       id: "",
       name: "",
@@ -54,17 +52,33 @@ document.addEventListener("alpine:init", () => {
         return;
       }
 
+      // get order title
       fetch(`/order/${this.order.id}/title`)
         .then((response) => {
           return response.json();
         })
         .then((data) => {
           if (data.error) {
-            this.state = "noid";
-          } else {
-            this.order.title = data.title;
-            this.state = "register";
+            throw data.error;
           }
+          this.order.title = data.title;
+          return fetch(`/order/${this.order.id}/list/${this.user.id}`);
+        })
+        .then((response) => {
+          return response.json();
+        })
+        .then((data) => {
+          if (data.error) {
+            throw data.error;
+          }
+          if (data?.length) {
+            this.participant = data.map((item) => ({
+              id: item.id,
+              value: item.value,
+              status: null,
+            }));
+          }
+          this.state = "register";
         })
         .catch((error) => {
           console.error(error);
@@ -73,42 +87,69 @@ document.addEventListener("alpine:init", () => {
     },
 
     addNewParticipant() {
-      this.participant.count += 1;
-      this.participant.names.push("");
+      this.participant.push({ id: null, value: "", status: "add" });
     },
 
-    removeParticipant() {
-      if (this.participant.count === 1) return;
-      this.participant.count -= 1;
-      this.participant.names.pop();
+    editParticipant(id) {
+      if (!id) return;
+      const index = this.participant.findIndex((item) => item.id === id);
+      this.participant[index].status = "edit";
+    },
+
+    removeParticipant(index) {
+      if (this.participant[index].id) {
+        this.participantDelId.push(this.participant[index].id);
+      }
+      this.participant = this.participant.filter((val, i) => i !== index);
     },
 
     submit() {
-      const filteredParticipant = this.participant.names.filter(
-        (item) => !!item
-      );
-      if (!filteredParticipant.length) {
-        this.error_header = "Nama harus diisi";
+      const participantAdd = [];
+      const participantEdit = [];
+      this.participant.forEach((item) => {
+        if (item.status === "add" && item.value) {
+          participantAdd.push({
+            value: item.value,
+            order_id: parseInt(this.order.id),
+            user_id: parseInt(this.user.id) || null,
+            user_name: this.user.name || null,
+            user_username: this.user.username || null,
+          });
+        }
+        if (item.status === "edit" && item.id && item.value) {
+          participantEdit.push({ id: item.id, value: item.value });
+        }
+      });
+
+      if (
+        !participantAdd.length &&
+        !participantEdit.length &&
+        !this.participantDelId
+      ) {
+        this.error_header = "Tidak ada perubahan data";
         return;
       }
 
-      const data = filteredParticipant.map((item) => ({
-        value: item,
-        order_id: parseInt(this.order.id),
-        user_id: parseInt(this.user.id) || null,
-        user_name: this.user.name || null,
-        user_username: this.user.username || null,
-      }));
+      const data = { add: null, edit: null, destroy: null };
+      if (participantAdd.length) {
+        data.add = participantAdd;
+      }
+      if (participantEdit.length) {
+        data.edit = participantEdit;
+      }
+      if (this.participantDelId.length) {
+        data.destroy = this.participantDelId;
+      }
       console.log(data);
 
       this.loadingSubmit = true;
       let serverError = false;
-      fetch("/order", {
+      fetch(`/order/${this.order.id}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ data }),
+        body: JSON.stringify(data),
       })
         .then((response) => {
           serverError = !response.ok;

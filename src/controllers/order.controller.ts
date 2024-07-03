@@ -7,7 +7,6 @@ import {
 } from "../utils/chat_instance.util";
 import { orderConst } from "../constants/order.const";
 import { Order } from "../databases/models/order.model";
-import { sequelize } from "../databases";
 import { botConst } from "../constants/bot.const";
 import { encodeText } from "../utils/text.util";
 import { telegramConfig } from "../configs/telegram.config";
@@ -252,6 +251,13 @@ export const orderListAdd = async (
 
   const order_id = data[0].order_id;
 
+  await orderListRealtimeUpdate(bot, order_id);
+};
+
+export const orderListRealtimeUpdate = async (
+  bot: TelegramBot,
+  order_id: number
+) => {
   if (timer_id) clearTimeout(timer_id);
 
   timer_id = setTimeout(async () => {
@@ -334,4 +340,37 @@ export const orderGetTitle = async (order_id: number) => {
   return {
     title: order.name,
   };
+};
+
+export const orderUserGetData = async (order_id: number, user_id: number) => {
+  const orders = await OrderList.findAll({ where: { order_id, user_id } });
+  return orders;
+};
+
+interface IOrderUserUpdateData {
+  add?: ICreateOrderList[];
+  edit?: { id: number; value: string }[];
+  destroy?: number[];
+}
+
+export const orderUserUpdateData = async (
+  bot: TelegramBot,
+  order_id: number,
+  updateData: IOrderUserUpdateData
+) => {
+  if (updateData.add?.length) {
+    await OrderList.bulkCreate(updateData.add);
+  }
+
+  if (updateData.edit?.length) {
+    for (const edit of updateData.edit) {
+      await OrderList.update({ value: edit.value }, { where: { id: edit.id } });
+    }
+  }
+
+  if (updateData.destroy) {
+    await OrderList.destroy({ where: { id: updateData.destroy } });
+  }
+
+  await orderListRealtimeUpdate(bot, order_id);
 };
