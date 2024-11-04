@@ -49,6 +49,9 @@ jobs:
             ${{ env.GAR_LOCATION }}/${{env.IMAGE_NAME}}:${{ github.sha }}
             ${{ env.GAR_LOCATION }}/${{env.IMAGE_NAME}}:latest
 
+      - name: Log Port
+        run: echo "${{ secrets.DATABASE_PORT }}"
+
       - name: Deploy to Cloud Run
         uses: "google-github-actions/deploy-cloudrun@v2"
         with:
