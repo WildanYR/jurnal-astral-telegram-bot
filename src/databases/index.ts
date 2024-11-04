@@ -15,6 +15,7 @@ export const initDatabase = () => {
     username: databaseConfig.username,
     password: databaseConfig.password,
     host: databaseConfig.host,
+    port: databaseConfig.port,
   });
   if (!sequelize) {
     sequelize = new Sequelize(
@@ -24,6 +25,7 @@ export const initDatabase = () => {
       {
         host: databaseConfig.host,
         dialect: databaseConfig.dialect as any,
+        port: databaseConfig.port,
         define: {
           freezeTableName: true,
           timestamps: true,
