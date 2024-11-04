@@ -10,13 +10,6 @@ import { AuthorizeUser } from "./models/authorize_user.model";
 export let sequelize: Sequelize;
 
 export const initDatabase = () => {
-  console.log({
-    dbname: databaseConfig.dbname,
-    username: databaseConfig.username,
-    password: databaseConfig.password,
-    host: databaseConfig.host,
-    port: databaseConfig.port,
-  });
   if (!sequelize) {
     sequelize = new Sequelize(
       databaseConfig.dbname,
