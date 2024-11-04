@@ -59,6 +59,7 @@ COPY --chown=node:node --from=build /usr/src/app/dist ./dist
 
 # Set NODE_ENV environment variable
 ENV NODE_ENV production
+ENV NODE_OPTIONS="--dns-result-order=ipv4first"
 
 # Start the server using the production build
 CMD [ "node", "dist/main.js" ]
