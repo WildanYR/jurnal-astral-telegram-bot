@@ -21,6 +21,27 @@
           class="flex flex-col flex-1 w-full gap-4 p-5 lg:max-w-sm lg:shadow-lg"
         >
           <h1 class="font-serif text-4xl font-bold tracking-wide">Glosarium</h1>
+          <!-- Search Mode -->
+          <div class="space-y-2">
+            <p class="text-sm">Mode Pencarian</p>
+            <div class="flex gap-2">
+              <button
+                @click="changeSearchMode(1)"
+                class="flex flex-col items-center justify-center w-full px-4 py-2 text-sm border border-blue-200 rounded-lg backdrop-blur-sm"
+                :class="searchMode === 1 ? 'bg-blue-600/70 text-white' : 'text-blue-600'"
+              >
+                Kata
+              </button>
+              <button
+                @click="changeSearchMode(2)"
+                class="flex flex-col items-center justify-center w-full px-4 py-2 text-sm border border-blue-200 rounded-lg backdrop-blur-sm"
+                :class="searchMode === 2 ? 'bg-blue-600/70 text-white' : 'text-blue-600'"
+              >
+                Arti Kata
+              </button>
+            </div>
+          </div>
+
           <!-- Search Input -->
           <div class="relative">
             <div
@@ -67,7 +88,7 @@
             <input
               x-model="search"
               type="text"
-              placeholder="Cari kata"
+              :placeholder="searchMode === 'word' ? 'Cari Kata' : 'Cari Arti Kata'"
               @input.debounce.600ms="searchGlosarium"
               class="block w-full p-2 text-sm text-gray-900 bg-gray-200 border rounded-md ps-10 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
             />
@@ -98,12 +119,12 @@
           </template>
           <!-- Glosarium Word List -->
           <template x-if="!loadingGetGlosarium && glosarium.length">
-            <div class="space-y-1">
+            <div class="flex flex-col gap-1 divide-y divide-gray-200">
               <!-- Word -->
               <template x-for="item in glosarium" :key="item.id">
                 <button
                   @click="selectWord(item)"
-                  class="flex items-center w-full gap-2 px-3 py-2 text-sm rounded-sm hover:text-blue-500"
+                  class="flex items-center w-full gap-2 px-3 py-2 rounded-sm hover:text-blue-500"
                   :class="{'bg-blue-100': isWordSelected(item.id)}"
                 >
                   <!-- Checklist Icon -->
@@ -126,7 +147,10 @@
                       </svg>
                     </span>
                   </template>
-                  <span x-text="item.word"></span>
+                  <div class="flex flex-col items-start gap-1">
+                    <p x-text="item.word"></p>
+                    <p x-text="item.meaning" class="text-sm text-start"></p>
+                  </div>
                 </button>
               </template>
               <div class="flex items-center justify-center gap-3">

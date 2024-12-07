@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   getGlosariumMeaning,
   getGlosariumWithPagination,
+  searchGlosariumMeaning,
 } from "../controllers/glosarium.controller";
 import path from "path";
 
@@ -18,7 +19,16 @@ router.get("/", async (req, res) => {
     wordFilter = req.query.word as string;
   }
 
-  const glosariumData = await getGlosariumWithPagination(page, wordFilter);
+  let withMeaning = false;
+  if (req.query["with-meaning"] === "1") {
+    withMeaning = true;
+  }
+
+  const glosariumData = await getGlosariumWithPagination(
+    page,
+    wordFilter,
+    withMeaning
+  );
   res.json(glosariumData);
 });
 
@@ -32,6 +42,23 @@ router.get("/meaning", async (req, res) => {
   const glosarium = await getGlosariumMeaning(ids);
 
   res.json(glosarium);
+});
+
+router.get("/search-meaning", async (req, res) => {
+  let page = 1;
+  if (req.query.page) {
+    page = parseInt(req.query.page as string);
+  }
+
+  let wordFilter;
+  if (req.query.word) {
+    wordFilter = req.query.word as string;
+  }
+
+  const glosariumData = wordFilter
+    ? await searchGlosariumMeaning(page, wordFilter)
+    : await getGlosariumWithPagination(page, wordFilter, true);
+  res.json(glosariumData);
 });
 
 router.get("/app", (req, res) => {

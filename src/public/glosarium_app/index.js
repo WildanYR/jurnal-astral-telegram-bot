@@ -10,6 +10,7 @@ document.addEventListener("alpine:init", () => {
       hasPrev: false,
     },
     search: "",
+    searchMode: 1,
     copyStatus: 1,
     loadingGetGlosarium: false,
     loadingGetGlosariumMeaning: false,
@@ -19,11 +20,37 @@ document.addEventListener("alpine:init", () => {
       this.loadingGetGlosarium = true;
       const params = new URLSearchParams();
       params.append("page", this.glosariumPage);
+      params.append("with-meaning", "1");
+
       if (this.search) {
         params.append("word", this.search);
       }
+
       axios
         .get("/glosarium", { params })
+        .then((response) => {
+          this.glosarium = response.data.glosarium;
+          this.glosariumPageNav = response.data.pagination;
+        })
+        .catch((error) => {
+          console.log(error);
+        })
+        .finally(() => {
+          this.loadingGetGlosarium = false;
+        });
+    },
+
+    searchMeaning() {
+      this.loadingGetGlosarium = true;
+      const params = new URLSearchParams();
+      params.append("page", this.glosariumPage);
+
+      if (this.search) {
+        params.append("word", this.search);
+      }
+
+      axios
+        .get("/glosarium/search-meaning", { params })
         .then((response) => {
           this.glosarium = response.data.glosarium;
           this.glosariumPageNav = response.data.pagination;
@@ -59,6 +86,16 @@ document.addEventListener("alpine:init", () => {
 
     searchGlosarium() {
       this.glosariumPage = 1;
+      if (this.searchMode === 1) {
+        this.getGlosarium();
+      } else {
+        this.searchMeaning();
+      }
+    },
+
+    changeSearchMode(mode) {
+      this.searchMode = mode;
+      this.resetListData();
       this.getGlosarium();
     },
 
