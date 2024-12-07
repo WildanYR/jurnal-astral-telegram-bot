@@ -88,7 +88,7 @@
             <input
               x-model="search"
               type="text"
-              :placeholder="searchMode === 'word' ? 'Cari Kata' : 'Cari Arti Kata'"
+              :placeholder="searchMode === 1 ? 'Cari Kata' : 'Cari Arti Kata'"
               @input.debounce.600ms="searchGlosarium"
               class="block w-full p-2 text-sm text-gray-900 bg-gray-200 border rounded-md ps-10 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
             />
