@@ -80,6 +80,10 @@ document.addEventListener("alpine:init", () => {
       return index !== -1;
     },
 
+    clearSelectedWord() {
+      this.selectedGlosarium = [];
+    },
+
     copyMeaningToClipboard() {
       if (!this.glosariumMeaning.length) return;
       const glosariumText = this.glosariumMeaning
@@ -101,10 +105,9 @@ document.addEventListener("alpine:init", () => {
         });
     },
 
-    resetData() {
+    resetListData() {
       this.glosarium = [];
       this.glosariumMeaning = [];
-      this.selectedGlosarium = [];
       this.glosariumPage = 1;
       this.glosariumPageNav = {
         hasNext: false,
@@ -114,7 +117,7 @@ document.addEventListener("alpine:init", () => {
     },
 
     routeToList() {
-      this.resetData();
+      this.resetListData();
       this.route = "list";
       this.getGlosarium();
     },
