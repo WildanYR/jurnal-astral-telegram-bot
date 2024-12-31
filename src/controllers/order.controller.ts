@@ -399,3 +399,114 @@ export const orderUserUpdateData = async (
 
   await orderListRealtimeUpdate(bot, order_id);
 };
+
+export const orderSortAvallonInit = async (
+  bot: TelegramBot,
+  chat_id: number,
+  user_id: number,
+  order_id?: number
+) => {
+  if (!order_id) {
+    await bot.sendMessage(chat_id, "Order Id Invalid");
+    return;
+  }
+
+  await setChatInstanceState(
+    chat_id,
+    user_id,
+    orderConst.state.GET_AVALLON_ORDER,
+    { metadata: order_id.toString() }
+  );
+  await bot.sendMessage(
+    chat_id,
+    "Masukkan nomor list Avallon dengan angka dipisahkan koma (,) tanpa spasi:\ncontoh: 1,3,5,8,11,43"
+  );
+};
+
+export const orderSortAvallonDone = async (
+  bot: TelegramBot,
+  chat_id: number,
+  user_id: number,
+  avallon_idx: number[]
+) => {
+  const chatInstance = await getChatInstance(chat_id, user_id);
+  if (chatInstance.state !== orderConst.state.GET_AVALLON_ORDER) {
+    return;
+  }
+
+  const order = await Order.findOne({
+    where: { id: parseInt(chatInstance.metadata) },
+    include: [{ model: OrderList, as: "order_list" }],
+  });
+
+  if (!order) {
+    await setChatInstanceState(chat_id, user_id, botConst.state.START, {
+      metadata: "",
+    });
+    await bot.sendMessage(chat_id, "Kegiatan Tidak Ditemukan");
+    return;
+  }
+
+  const timeStr = new Date()
+    .toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })
+    .split(", ")[1]
+    .substring(0, 5);
+  let order_list_text = `<blockquote>update ${timeStr} WIB</blockquote>\n<strong>${
+    order.name
+  }</strong>\n\n${
+    order.description ? `${order.description}\n\n` : ""
+  }Daftar Peserta:\n\n`;
+  let count = 1;
+
+  if (order.order_list.length) {
+    const pesertaList = order.order_list.map((p) => p.value);
+
+    const peserta = [];
+    const avallon = [];
+
+    for (let i = 0; i < pesertaList.length; i++) {
+      if (avallon_idx.includes(i + 1)) {
+        avallon.push(pesertaList[i]);
+      } else {
+        peserta.push(pesertaList[i]);
+      }
+    }
+    let dv = 1;
+    if (!peserta.length) {
+      dv = 0;
+    } else if (avallon.length < peserta.length) {
+      dv = Math.ceil(peserta.length / avallon.length);
+    }
+
+    let avallonCount = 0;
+    let pesertaCount = 0;
+    let dvCount = 0;
+    const result = [];
+    for (let i = 0; i < pesertaList.length; i++) {
+      if (
+        (dvCount === 0 && avallonCount < avallon.length) ||
+        (dv !== 0 && pesertaCount >= peserta.length)
+      ) {
+        result.push(`${i + 1}. ${avallon[avallonCount]}`);
+        avallonCount++;
+      } else {
+        result.push(`${i + 1}. ${peserta[pesertaCount]}`);
+        pesertaCount++;
+      }
+
+      if (dvCount === dv) {
+        dvCount = 0;
+      } else {
+        dvCount++;
+      }
+    }
+    order_list_text += result.join("\n");
+  } else {
+    order_list_text += "<i>Belum Ada Peserta</i>";
+  }
+
+  await setChatInstanceState(chat_id, user_id, botConst.state.START, {
+    metadata: "",
+  });
+  await bot.sendMessage(chat_id, order_list_text);
+};
