@@ -109,7 +109,7 @@ export const orderCreateDone = async (
 
   await bot.sendMessage(
     chat_id,
-    `Anda dapat membagikan hasil list dengan command\n\n<strong>Data List Terbaru</strong>\n<code>/orderresult_${order.id}</code>\n<code>/orderresult_${order.id}@${telegramConfig.username}</code> untuk grup\n\n<strong>Auto Update Data</strong>\n<code>/orderresultrt_${order.id}</code>\n<code>/orderresultrt_${order.id}@${telegramConfig.username}</code> untuk grup\n\n<strong>Stop Auto Update Data</strong>\n<code>/orderresultrtstop_${order.id}</code>\n<code>/orderresultrtstop_${order.id}@${telegramConfig.username}</code> untuk grup\n\nNote kirim ke grup:\n- bot harus menjadi member dari grup\n- Hanya yang sudah login sebagai Admin dari bot ini /auth yang bisa mengirim ke grup`,
+    `Anda dapat membagikan hasil list dengan command\n\n<strong>Data List Terbaru</strong>\n<code>/orderresult_${order.id}</code>\n<code>/orderresult_${order.id}@${telegramConfig.username}</code> untuk grup\n\n<strong>Auto Update Data</strong>\n<code>/orderresultrt_${order.id}</code>\n<code>/orderresultrt_${order.id}@${telegramConfig.username}</code> untuk grup\n\n<strong>Stop Auto Update Data</strong>\n<code>/orderresultrtstop_${order.id}</code>\n<code>/orderresultrtstop_${order.id}@${telegramConfig.username}</code> untuk grup\n<strong>Stop Semua Auto Update Data</strong>\n<code>/orderresultrtstopall_${order.id}</code>\nNote kirim ke grup:\n- bot harus menjadi member dari grup\n- Hanya yang sudah login sebagai Admin dari bot ini /auth yang bisa mengirim ke grup`,
     { parse_mode: "HTML" }
   );
 
@@ -139,7 +139,10 @@ export const orderGetResultText = async (order_id: number) => {
 
   if (order.order_list.length) {
     for (const list of order.order_list) {
-      order_list_text += `${count}. ${list.value}\n`;
+      const name = list.user_username
+        ? `@${list.user_username}`
+        : list.user_name;
+      order_list_text += `${count}. ${list.value} (${name})\n`;
       count++;
     }
   } else {
@@ -323,6 +326,28 @@ export const orderStopResultListener = async (
       console.log("Error ", error.toString());
     }
   }
+};
+
+export const orderStopAllResultListener = async (
+  bot: TelegramBot,
+  chat_id: number,
+  order_id?: number
+) => {
+  if (!order_id) {
+    await bot.sendMessage(chat_id, "Order Id Invalid");
+    return;
+  }
+
+  const orderChatCount = await OrderChatUpdate.count({ where: { order_id } });
+
+  if (!orderChatCount) {
+    await bot.sendMessage(chat_id, "Tidak ada update realtime yang berjalan");
+    return;
+  }
+
+  await OrderChatUpdate.destroy({ where: { order_id } });
+
+  await bot.sendMessage(chat_id, "Update realtime telah dihentikan");
 };
 
 export const orderGetTitle = async (order_id: number) => {
