@@ -508,5 +508,5 @@ export const orderSortAvallonDone = async (
   await setChatInstanceState(chat_id, user_id, botConst.state.START, {
     metadata: "",
   });
-  await bot.sendMessage(chat_id, order_list_text);
+  await bot.sendMessage(chat_id, order_list_text, { parse_mode: "HTML" });
 };
