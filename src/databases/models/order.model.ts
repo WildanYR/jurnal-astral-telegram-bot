@@ -7,11 +7,13 @@ import {
 } from "sequelize";
 import { OrderList } from "./order_list.model";
 import { OrderChatUpdate } from "./order_chat_update.model";
+import { OrderCategory } from "../../types/order_category.type";
 
 interface IOrderAttributes {
   id: number;
   name: string;
   description?: string;
+  category?: string;
 }
 
 interface ICreateOrderAttributes extends Optional<IOrderAttributes, "id"> {}
@@ -34,6 +36,10 @@ export class Order extends Model<IOrderAttributes, ICreateOrderAttributes> {
       },
       description: {
         type: DataTypes.STRING,
+      },
+      category: {
+        type: DataTypes.STRING,
+        defaultValue: "DEFAULT",
       },
     };
   }
@@ -59,6 +65,7 @@ export class Order extends Model<IOrderAttributes, ICreateOrderAttributes> {
   declare id: number;
   declare name: string;
   declare description: string;
+  declare category: OrderCategory;
   declare created_at: Date;
   declare updated_at: Date;
 

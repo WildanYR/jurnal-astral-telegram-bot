@@ -3,7 +3,6 @@ import {
   orderAddResultListener,
   orderCreateInit,
   orderGetResult,
-  orderSortAvallonInit,
   orderStopResultListener,
 } from "../controllers/order.controller";
 import {
@@ -77,17 +76,4 @@ export const initOrderHandler = (bot: TelegramBot) => {
 
   bot.onText(/\/orderresultrtstop (.+)/, handleOrderResultStop);
   bot.onText(/\/orderresultrtstop_(.+)/, handleOrderResultStop);
-
-  const handleAvallonSort = async (
-    msg: TelegramBot.Message,
-    matches: RegExpExecArray | null
-  ) => {
-    if (msg.chat.type !== "private") return;
-
-    const order_id = matches ? parseInt(matches[1].split("@")[0]) : undefined;
-    await orderSortAvallonInit(bot, msg.chat.id, msg.from!.id, order_id);
-  };
-
-  bot.onText(/\/orderavallonsort (.+)/, handleAvallonSort);
-  bot.onText(/\/orderavallonsort_(.+)/, handleAvallonSort);
 };

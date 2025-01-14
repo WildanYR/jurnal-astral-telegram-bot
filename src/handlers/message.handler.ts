@@ -5,7 +5,6 @@ import { orderConst } from "../constants/order.const";
 import {
   orderCreateSetDesc,
   orderCreateSetTitle,
-  orderSortAvallonDone,
 } from "../controllers/order.controller";
 import { authConst } from "../constants/auth.const";
 import { authValidate } from "../controllers/auth.controller";
@@ -36,30 +35,6 @@ export const initMessageHandler = (bot: TelegramBot) => {
 
       if (chatInstance.state === orderConst.state.GET_DESCRIPTION) {
         await orderCreateSetDesc(bot, chat_id, user_id, msg.text!);
-      }
-
-      if (chatInstance.state === orderConst.state.GET_AVALLON_ORDER) {
-        const noSpaceStr = msg.text!.replace(/\s/g, "");
-        let isError = false;
-        if (noSpaceStr.includes(",")) {
-          try {
-            const avallonIdx = noSpaceStr
-              .split(",")
-              .map((idx) => parseInt(idx));
-            await orderSortAvallonDone(bot, chat_id, user_id, avallonIdx);
-          } catch (error) {
-            isError = true;
-          }
-        } else {
-          isError = true;
-        }
-
-        if (isError) {
-          await bot.sendMessage(
-            chat_id,
-            "Format nomor Avallon tidak sesuai, gunakan angka dipisahkan koma (,) tanpa spasi\n\ncontoh: 1,3,5,8,14"
-          );
-        }
       }
     }
   });

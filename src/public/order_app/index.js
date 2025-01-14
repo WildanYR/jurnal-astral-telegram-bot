@@ -1,4 +1,6 @@
-window.Telegram.WebApp.ready();
+if (window.Telegram.WebApp) {
+  window.Telegram.WebApp.ready();
+}
 
 function decodeParam(encoded) {
   const binary = atob(decodeURIComponent(encoded));
@@ -9,14 +11,33 @@ function decodeParam(encoded) {
   return String.fromCharCode(...new Uint16Array(bytes.buffer));
 }
 
+function convertMetadataToStr(category, metadata) {
+  if (!metadata) return null;
+
+  if (category === "DRAGON_RING") {
+    return JSON.stringify({
+      isAvallon: metadata.isAvallon === "true",
+    });
+  }
+
+  if (category === "FORMASI_PIRAMID") {
+    return JSON.stringify({
+      position: metadata.position,
+    });
+  }
+
+  return null;
+}
+
 document.addEventListener("alpine:init", () => {
   Alpine.data("order", () => ({
     state: "load",
     order: {
       id: "",
       title: "",
+      category: "",
     },
-    participant: [{ id: null, value: "", status: "add" }],
+    participant: [{ id: null, value: "", status: "add", metadata: null }],
     participantDelId: [],
     user: {
       id: "",
@@ -28,7 +49,7 @@ document.addEventListener("alpine:init", () => {
     error_header: "",
 
     init() {
-      if (window.Telegram.WebApp.initDataUnsafe.start_param) {
+      if (window.Telegram.WebApp?.initDataUnsafe.start_param) {
         const param = decodeParam(
           window.Telegram.WebApp.initDataUnsafe.start_param
         ).split("|");
@@ -62,6 +83,17 @@ document.addEventListener("alpine:init", () => {
             throw data.error;
           }
           this.order.title = data.title;
+          this.order.category = data.category;
+          if (data.category === "DRAGON_RING") {
+            this.participant[0].metadata = {
+              isAvallon: "false",
+            };
+          }
+          if (data.category === "FORMASI_PIRAMID") {
+            this.participant[0].metadata = {
+              position: "SUPPORT",
+            };
+          }
           return fetch(`/order/${this.order.id}/list/${this.user.id}`);
         })
         .then((response) => {
@@ -72,11 +104,25 @@ document.addEventListener("alpine:init", () => {
             throw data.error;
           }
           if (data?.length) {
-            this.participant = data.map((item) => ({
-              id: item.id,
-              value: item.value,
-              status: null,
-            }));
+            this.participant = data.map((item) => {
+              let metadata = null;
+              if (this.order.category === "DRAGON_RING") {
+                metadata = {
+                  isAvallon: item.metadata?.isAvallon ? "true" : "false",
+                };
+              }
+              if (this.order.category === "FORMASI_PIRAMID") {
+                metadata = {
+                  position: item.metadata?.position || "SUPPORT",
+                };
+              }
+              return {
+                id: item.id,
+                value: item.value,
+                status: null,
+                metadata,
+              };
+            });
           }
           this.state = "register";
         })
@@ -87,7 +133,18 @@ document.addEventListener("alpine:init", () => {
     },
 
     addNewParticipant() {
-      this.participant.push({ id: null, value: "", status: "add" });
+      let metadata = null;
+      if (this.order.category === "DRAGON_RING") {
+        metadata = {
+          isAvallon: "false",
+        };
+      }
+      if (this.order.category === "FORMASI_PIRAMID") {
+        metadata = {
+          position: "SUPPORT",
+        };
+      }
+      this.participant.push({ id: null, value: "", status: "add", metadata });
     },
 
     editParticipant(id) {
@@ -114,10 +171,15 @@ document.addEventListener("alpine:init", () => {
             user_id: parseInt(this.user.id) || null,
             user_name: this.user.name || null,
             user_username: this.user.username || null,
+            metadata: convertMetadataToStr(this.order.category, item.metadata),
           });
         }
         if (item.status === "edit" && item.id && item.value) {
-          participantEdit.push({ id: item.id, value: item.value });
+          participantEdit.push({
+            id: item.id,
+            value: item.value,
+            metadata: convertMetadataToStr(this.order.category, item.metadata),
+          });
         }
       });
 

@@ -1,4 +1,4 @@
-import TelegramBot from "node-telegram-bot-api";
+import TelegramBot, { InlineKeyboardButton } from "node-telegram-bot-api";
 import { OrderList } from "../databases/models/order_list.model";
 import { ICreateOrderList } from "../types/order_list_create.type";
 import {
@@ -11,6 +11,11 @@ import { botConst } from "../constants/bot.const";
 import { encodeText } from "../utils/text.util";
 import { telegramConfig } from "../configs/telegram.config";
 import { OrderChatUpdate } from "../databases/models/order_chat_update.model";
+import { OrderCategory } from "../types/order_category.type";
+import {
+  OrderMetadataDragonRing,
+  OrderMetadataFormasiPiramid,
+} from "../types/order_metadata.type";
 
 let timer_id: NodeJS.Timeout;
 
@@ -24,7 +29,34 @@ export const orderCreateInit = async (
   chat_id: number,
   user_id: number
 ) => {
-  await setChatInstanceState(chat_id, user_id, orderConst.state.GET_TITLE);
+  await setChatInstanceState(chat_id, user_id, orderConst.state.GET_CATEGORY);
+
+  const categoryInlineKeyboard: InlineKeyboardButton[][] =
+    orderConst.category.map((item) => {
+      return [
+        {
+          text: item.label,
+          callback_data: `${orderConst.callbackData.CATEGORY};${chat_id};${user_id};${item.value}`,
+        },
+      ];
+    });
+
+  await bot.sendMessage(chat_id, "Silahkan Pilih Kategori", {
+    reply_markup: {
+      inline_keyboard: categoryInlineKeyboard,
+    },
+  });
+};
+
+export const orderCreateSetCategory = async (
+  bot: TelegramBot,
+  chat_id: number,
+  user_id: number,
+  category: OrderCategory
+) => {
+  await setChatInstanceState(chat_id, user_id, orderConst.state.GET_TITLE, {
+    metadata: category,
+  });
   await bot.sendMessage(
     chat_id,
     "Masukkan Nama Kegiatan:\nmisal: Dragon Ring 01 Januari 1999"
@@ -37,7 +69,11 @@ export const orderCreateSetTitle = async (
   user_id: number,
   title: string
 ) => {
-  const order = await Order.create({ name: title });
+  const chatInstance = await getChatInstance(chat_id, user_id);
+  const order = await Order.create({
+    name: title,
+    category: chatInstance.metadata,
+  });
   await setChatInstanceState(
     chat_id,
     user_id,
@@ -116,41 +152,222 @@ export const orderCreateDone = async (
   await orderAddResultListener(bot, chat_id, order.id);
 };
 
-export const orderGetResultText = async (order_id: number) => {
+const generateOrderResultTemplate = (
+  id: number,
+  title: string,
+  description: string,
+  list: string
+) => {
+  const timeStr = new Date()
+    .toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })
+    .split(", ")[1]
+    .substring(0, 5);
+
+  const orderAppLink = getOrderAppLink(id);
+
+  return `
+    <blockquote>update ${timeStr} WIB</blockquote>\n
+    <strong>${title}</strong>\n\n
+    ${description ? `${description}\n\n` : ""}
+    ${list ? `${list}\n\n` : "<i>Belum Ada List</i>\n\n"}
+    Link Pendaftaran:\n${orderAppLink}
+  `;
+};
+
+export const orderResultDefault = async (order: Order) => {
+  let order_list_text = "";
+  let count = 1;
+
+  if (order.order_list.length) {
+    for (const list of order.order_list) {
+      order_list_text += `${count}. ${list.value}\n`;
+      count++;
+    }
+  }
+
+  return generateOrderResultTemplate(
+    order.id,
+    order.name,
+    order.description,
+    order_list_text
+  );
+};
+
+export const orderResultDragonRing = async (order: Order) => {
+  let order_list_text = "";
+
+  if (order.order_list.length >= 3) {
+    const pesertaList = order.order_list.map((p) => {
+      const metadata = JSON.parse(p.metadata) as OrderMetadataDragonRing;
+      const isAvallon = metadata.isAvallon;
+      return {
+        name: p.value,
+        isAvallon,
+      };
+    });
+
+    const peserta = [];
+    const avallon = [];
+
+    for (let i = 0; i < pesertaList.length; i++) {
+      if (pesertaList[i].isAvallon) {
+        avallon.push(pesertaList[i].name);
+      } else {
+        peserta.push(pesertaList[i].name);
+      }
+    }
+    let dv = 1;
+    if (!peserta.length) {
+      dv = 0;
+    } else if (avallon.length < peserta.length) {
+      dv = Math.ceil(peserta.length / avallon.length);
+    }
+
+    let avallonCount = 0;
+    let pesertaCount = 0;
+    let dvCount = 0;
+    const result = [];
+    for (let i = 0; i < pesertaList.length; i++) {
+      if (
+        (dvCount === 0 && avallonCount < avallon.length) ||
+        (dv !== 0 && pesertaCount >= peserta.length)
+      ) {
+        result.push(`${i + 1}. ${avallon[avallonCount]}`);
+        avallonCount++;
+      } else {
+        result.push(`${i + 1}. ${peserta[pesertaCount]}`);
+        pesertaCount++;
+      }
+
+      if (dvCount === dv) {
+        dvCount = 0;
+      } else {
+        dvCount++;
+      }
+    }
+    order_list_text += result.join("\n");
+  } else {
+    order_list_text +=
+      "Peserta akan ditampilkan setelah minimal 3 peserta terdaftar";
+  }
+
+  return generateOrderResultTemplate(
+    order.id,
+    order.name,
+    order.description,
+    order_list_text
+  );
+};
+
+export const orderResultFormasiKristal = async (order: Order) => {
+  let order_list_text = "";
+
+  if (order.order_list.length) {
+    const pesertaList = order.order_list.map((p) => {
+      const metadata = JSON.parse(p.metadata) as OrderMetadataFormasiPiramid;
+      const position = metadata.position;
+      return {
+        name: p.value,
+        position,
+      };
+    });
+
+    const jp = [];
+    const t12 = [];
+    const support = [];
+    for (const peserta of pesertaList) {
+      if (peserta.position === "JP") {
+        jp.push(peserta.name);
+      }
+      if (peserta.position === "T12") {
+        t12.push(peserta.name);
+      }
+      if (peserta.position === "SUPPORT") {
+        support.push(peserta.name);
+      }
+    }
+
+    if (t12.length < 9 && support.length > 0) {
+      const t12Need = 9 - t12.length;
+
+      for (let i = 0; i < t12Need; i++) {
+        if (support.length === 0) break;
+        t12.push(support[i]);
+        support.shift();
+      }
+    }
+
+    order_list_text += "PIC: \n\n";
+
+    order_list_text += "JP:\n";
+    if (jp.length) {
+      for (let i = 0; i < jp.length; i++) {
+        order_list_text += `${i + 1}. ${jp[i]}\n`;
+      }
+    } else {
+      for (let i = 0; i < 3; i++) {
+        order_list_text += `${i + 1}. \n`;
+      }
+    }
+
+    order_list_text += "BARA: \n\n";
+
+    order_list_text += "\nT12:\n";
+    if (t12.length) {
+      for (let i = 0; i < t12.length; i++) {
+        order_list_text += `${i + 1}. ${t12[i]}\n`;
+      }
+    } else {
+      for (let i = 0; i < 9; i++) {
+        order_list_text += `${i + 1}. \n`;
+      }
+    }
+
+    order_list_text += "NIPUL: \n\n";
+
+    order_list_text += "\nSupport:\n";
+    if (support.length) {
+      const supportLoop = support.length > 15 ? 15 : support.length;
+      for (let i = 0; i < supportLoop; i++) {
+        order_list_text += `${i + 1}. ${support[i]}\n`;
+      }
+
+      if (support.length > 15) {
+        order_list_text += "\nStandby:\n";
+        for (let i = 15; i < support.length; i++) {
+          order_list_text += `${i - 14}. ${support[i]}\n`;
+        }
+      }
+    } else {
+      for (let i = 0; i < 15; i++) {
+        order_list_text += `${i + 1}. \n`;
+      }
+    }
+  }
+
+  return generateOrderResultTemplate(
+    order.id,
+    order.name,
+    order.description,
+    order_list_text
+  );
+};
+
+const generateOrderResultText = async (order_id: number) => {
   const order = await Order.findOne({
     where: { id: order_id },
     include: [{ model: OrderList, as: "order_list" }],
   });
 
-  if (!order) {
-    return "";
+  if (order) {
+    if (order.category === "DEFAULT") return await orderResultDefault(order);
+    if (order.category === "DRAGON_RING")
+      return await orderResultDragonRing(order);
+    if (order.category === "FORMASI_PIRAMID")
+      return await orderResultFormasiKristal(order);
   }
 
-  const timeStr = new Date()
-    .toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })
-    .split(", ")[1]
-    .substring(0, 5);
-  let order_list_text = `<blockquote>update ${timeStr} WIB</blockquote>\n<strong>${
-    order.name
-  }</strong>\n\n${
-    order.description ? `${order.description}\n\n` : ""
-  }Daftar Peserta:\n\n`;
-  let count = 1;
-
-  if (order.order_list.length) {
-    for (const list of order.order_list) {
-      const name = list.user_username
-        ? `@${list.user_username}`
-        : list.user_name;
-      order_list_text += `${count}. ${list.value} (${name})\n`;
-      count++;
-    }
-  } else {
-    order_list_text += "<i>Belum Ada Peserta</i>";
-  }
-
-  const orderAppLink = getOrderAppLink(order.id);
-  return `${order_list_text}\n\nLink Pendaftaran:\n${orderAppLink}`;
+  return "List tidak ditemukan";
 };
 
 export const orderGetResult = async (
@@ -166,7 +383,7 @@ export const orderGetResult = async (
     return;
   }
 
-  const orderResultText = await orderGetResultText(order_id);
+  const orderResultText = await generateOrderResultText(order_id);
   if (!orderResultText) {
     await bot.sendMessage(chat_id, "List tidak ditemukan", {
       message_thread_id: chat_thread_id,
@@ -268,7 +485,7 @@ export const orderListRealtimeUpdate = async (
 
     if (!orderUpdate.length) return;
 
-    const orderResultText = await orderGetResultText(order_id);
+    const orderResultText = await generateOrderResultText(order_id);
 
     if (!orderResultText) return;
 
@@ -353,7 +570,7 @@ export const orderStopAllResultListener = async (
 export const orderGetTitle = async (order_id: number) => {
   const order = await Order.findOne({
     where: { id: order_id },
-    attributes: ["id", "name"],
+    attributes: ["id", "name", "category"],
   });
 
   if (!order) {
@@ -364,6 +581,7 @@ export const orderGetTitle = async (order_id: number) => {
 
   return {
     title: order.name,
+    category: order.category,
   };
 };
 
@@ -374,7 +592,7 @@ export const orderUserGetData = async (order_id: number, user_id: number) => {
 
 interface IOrderUserUpdateData {
   add?: ICreateOrderList[];
-  edit?: { id: number; value: string }[];
+  edit?: { id: number; value: string; metadata: string }[];
   destroy?: number[];
 }
 
@@ -389,7 +607,10 @@ export const orderUserUpdateData = async (
 
   if (updateData.edit?.length) {
     for (const edit of updateData.edit) {
-      await OrderList.update({ value: edit.value }, { where: { id: edit.id } });
+      await OrderList.update(
+        { value: edit.value, metadata: edit.metadata },
+        { where: { id: edit.id } }
+      );
     }
   }
 
@@ -398,115 +619,4 @@ export const orderUserUpdateData = async (
   }
 
   await orderListRealtimeUpdate(bot, order_id);
-};
-
-export const orderSortAvallonInit = async (
-  bot: TelegramBot,
-  chat_id: number,
-  user_id: number,
-  order_id?: number
-) => {
-  if (!order_id) {
-    await bot.sendMessage(chat_id, "Order Id Invalid");
-    return;
-  }
-
-  await setChatInstanceState(
-    chat_id,
-    user_id,
-    orderConst.state.GET_AVALLON_ORDER,
-    { metadata: order_id.toString() }
-  );
-  await bot.sendMessage(
-    chat_id,
-    "Masukkan nomor list Avallon dengan angka dipisahkan koma (,) tanpa spasi:\ncontoh: 1,3,5,8,11,43"
-  );
-};
-
-export const orderSortAvallonDone = async (
-  bot: TelegramBot,
-  chat_id: number,
-  user_id: number,
-  avallon_idx: number[]
-) => {
-  const chatInstance = await getChatInstance(chat_id, user_id);
-  if (chatInstance.state !== orderConst.state.GET_AVALLON_ORDER) {
-    return;
-  }
-
-  const order = await Order.findOne({
-    where: { id: parseInt(chatInstance.metadata) },
-    include: [{ model: OrderList, as: "order_list" }],
-  });
-
-  if (!order) {
-    await setChatInstanceState(chat_id, user_id, botConst.state.START, {
-      metadata: "",
-    });
-    await bot.sendMessage(chat_id, "Kegiatan Tidak Ditemukan");
-    return;
-  }
-
-  const timeStr = new Date()
-    .toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })
-    .split(", ")[1]
-    .substring(0, 5);
-  let order_list_text = `<blockquote>update ${timeStr} WIB</blockquote>\n<strong>${
-    order.name
-  }</strong>\n\n${
-    order.description ? `${order.description}\n\n` : ""
-  }Daftar Peserta:\n\n`;
-  let count = 1;
-
-  if (order.order_list.length) {
-    const pesertaList = order.order_list.map((p) => p.value);
-
-    const peserta = [];
-    const avallon = [];
-
-    for (let i = 0; i < pesertaList.length; i++) {
-      if (avallon_idx.includes(i + 1)) {
-        avallon.push(pesertaList[i]);
-      } else {
-        peserta.push(pesertaList[i]);
-      }
-    }
-    let dv = 1;
-    if (!peserta.length) {
-      dv = 0;
-    } else if (avallon.length < peserta.length) {
-      dv = Math.ceil(peserta.length / avallon.length);
-    }
-
-    let avallonCount = 0;
-    let pesertaCount = 0;
-    let dvCount = 0;
-    const result = [];
-    for (let i = 0; i < pesertaList.length; i++) {
-      if (
-        (dvCount === 0 && avallonCount < avallon.length) ||
-        (dv !== 0 && pesertaCount >= peserta.length)
-      ) {
-        result.push(`${i + 1}. ${avallon[avallonCount]}`);
-        avallonCount++;
-      } else {
-        result.push(`${i + 1}. ${peserta[pesertaCount]}`);
-        pesertaCount++;
-      }
-
-      if (dvCount === dv) {
-        dvCount = 0;
-      } else {
-        dvCount++;
-      }
-    }
-    order_list_text += result.join("\n");
-  } else {
-    order_list_text += "<i>Belum Ada Peserta</i>";
-  }
-
-  await setChatInstanceState(chat_id, user_id, botConst.state.START, {
-    metadata: "",
-  });
-  await bot.sendMessage(chat_id, order_list_text, { parse_mode: "HTML" });
 };

@@ -14,6 +14,7 @@ interface IOrderListAttributes {
   user_id?: number;
   user_name?: string;
   user_username?: string;
+  metadata?: string;
 }
 
 interface ICreateOrderListAttributes
@@ -45,6 +46,7 @@ export class OrderList extends Model<
       user_id: DataTypes.BIGINT,
       user_name: DataTypes.STRING,
       user_username: DataTypes.STRING,
+      metadata: DataTypes.TEXT,
     };
   }
 
@@ -68,6 +70,7 @@ export class OrderList extends Model<
   declare user_id: number;
   declare user_name: string;
   declare user_username: string;
+  declare metadata: string;
   declare created_at: Date;
   declare updated_at: Date;
 
