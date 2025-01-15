@@ -172,6 +172,7 @@ document.addEventListener("alpine:init", () => {
           [name]: value,
         };
       }
+      this.editParticipant(this.participant[index].id);
     },
 
     submit() {
