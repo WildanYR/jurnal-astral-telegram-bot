@@ -106,15 +106,18 @@ document.addEventListener("alpine:init", () => {
           if (data?.length) {
             this.participant = data.map((item) => {
               let metadata = null;
-              if (this.order.category === "DRAGON_RING") {
-                metadata = {
-                  isAvallon: item.metadata?.isAvallon ? "true" : "false",
-                };
-              }
-              if (this.order.category === "FORMASI_PIRAMID") {
-                metadata = {
-                  position: item.metadata?.position || "SUPPORT",
-                };
+              if (item.metadata) {
+                const metadataObj = JSON.parse(item.metadata);
+                if (this.order.category === "DRAGON_RING") {
+                  metadata = {
+                    isAvallon: metadataObj.isAvallon ? "true" : "false",
+                  };
+                }
+                if (this.order.category === "FORMASI_PIRAMID") {
+                  metadata = {
+                    position: metadataObj.position || "SUPPORT",
+                  };
+                }
               }
               return {
                 id: item.id,
@@ -125,6 +128,7 @@ document.addEventListener("alpine:init", () => {
             });
           }
           this.state = "register";
+          console.log({ P0: this.participant });
         })
         .catch((error) => {
           console.error(error);
@@ -158,6 +162,16 @@ document.addEventListener("alpine:init", () => {
         this.participantDelId.push(this.participant[index].id);
       }
       this.participant = this.participant.filter((val, i) => i !== index);
+    },
+
+    changeParticipantMetadata(value, name, index) {
+      if (this.participant[index].metadata) {
+        this.participant[index].metadata[name] = value;
+      } else {
+        this.participant[index].metadata = {
+          [name]: value,
+        };
+      }
     },
 
     submit() {

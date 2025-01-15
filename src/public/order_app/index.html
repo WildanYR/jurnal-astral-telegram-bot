@@ -47,7 +47,7 @@
               <!-- Input Container -->
               <div class="space-y-5">
                 <template x-for="(input, i) in participant" :key="i">
-                  <div class="space-y-2">
+                  <div class="p-4 space-y-2 bg-gray-100 rounded-md">
                     <!-- Name Input -->
                     <div>
                       <p x-text="'Nama ' + (i+1)" class="mb-1 text-sm"></p>
@@ -87,134 +87,158 @@
                     </div>
                     <!-- Avallon Radio -->
                     <template x-if="order.category === 'DRAGON_RING'">
-                      <div class="flex flex-col gap-4">
-                        <div class="inline-flex items-center">
-                          <label
-                            class="relative flex items-center cursor-pointer"
-                            for="avallon"
+                      <div>
+                        <p class="mb-1 text-sm font-light">
+                          Punya nama Avallon?
+                        </p>
+                        <div
+                          class="flex items-center justify-between gap-2 text-start"
+                        >
+                          <button
+                            @click="changeParticipantMetadata('true', 'isAvallon', i)"
+                            type="button"
+                            class="flex items-center justify-center w-full gap-1 p-2 text-sm border border-gray-200 rounded-md focus:ring-0"
+                            :class="participant[i].metadata.isAvallon === 'true' ? 'text-white bg-blue-600' : 'text-gray-900 bg-white'"
                           >
-                            <input
-                              x-model="participant[i].metadata.isAvallon"
-                              x-on:change="editParticipant(input.id)"
-                              value="true"
-                              type="radio"
-                              class="w-5 h-5 transition-all border rounded-full appearance-none cursor-pointer peer border-slate-300 checked:border-slate-400"
-                              id="avallon"
-                            />
-                            <span
-                              class="absolute w-3 h-3 transition-opacity duration-200 transform -translate-x-1/2 -translate-y-1/2 rounded-full opacity-0 bg-slate-800 peer-checked:opacity-100 top-1/2 left-1/2"
+                            <template
+                              x-if="participant[i].metadata.isAvallon === 'true'"
                             >
-                            </span>
-                          </label>
-                          <label
-                            class="ml-2 text-sm cursor-pointer text-slate-600"
-                            for="avallon"
-                            >punya nama Avallon</label
-                          >
-                        </div>
+                              <span class="text-white">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  viewBox="0 0 24 24"
+                                  fill="currentColor"
+                                  class="size-5"
+                                >
+                                  <path
+                                    fill-rule="evenodd"
+                                    d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z"
+                                    clip-rule="evenodd"
+                                  />
+                                </svg>
+                              </span>
+                            </template>
 
-                        <div class="inline-flex items-center">
-                          <label
-                            class="relative flex items-center cursor-pointer"
-                            for="notavallon"
+                            Sudah
+                          </button>
+                          <button
+                            @click="changeParticipantMetadata('false', 'isAvallon', i)"
+                            type="button"
+                            class="flex items-center justify-center w-full gap-1 p-2 text-sm border border-gray-200 rounded-md focus:ring-0"
+                            :class="participant[i].metadata.isAvallon === 'false' ? 'text-white bg-blue-600' : 'text-gray-900 bg-white'"
                           >
-                            <input
-                              x-model="participant[i].metadata.isAvallon"
-                              x-on:change="editParticipant(input.id)"
-                              value="false"
-                              type="radio"
-                              class="w-5 h-5 transition-all border rounded-full appearance-none cursor-pointer peer border-slate-300 checked:border-slate-400"
-                              id="notavallon"
-                            />
-                            <span
-                              class="absolute w-3 h-3 transition-opacity duration-200 transform -translate-x-1/2 -translate-y-1/2 rounded-full opacity-0 bg-slate-800 peer-checked:opacity-100 top-1/2 left-1/2"
+                            <template
+                              x-if="participant[i].metadata.isAvallon === 'false'"
                             >
-                            </span>
-                          </label>
-                          <label
-                            class="ml-2 text-sm cursor-pointer text-slate-600"
-                            for="notavallon"
-                            >belum punya nama Avallon</label
-                          >
+                              <span class="text-white">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  viewBox="0 0 24 24"
+                                  fill="currentColor"
+                                  class="size-5"
+                                >
+                                  <path
+                                    fill-rule="evenodd"
+                                    d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z"
+                                    clip-rule="evenodd"
+                                  />
+                                </svg>
+                              </span>
+                            </template>
+
+                            Belum
+                          </button>
                         </div>
                       </div>
                     </template>
                     <!-- F Piramid Position Radio -->
                     <template x-if="order.category === 'FORMASI_PIRAMID'">
-                      <div class="flex gap-10">
-                        <div class="inline-flex items-center">
-                          <label
-                            class="relative flex items-center cursor-pointer"
-                            for="jp"
+                      <div>
+                        <p class="mb-1 text-sm font-light">Posisi di Formasi</p>
+                        <div
+                          class="flex items-center justify-between gap-2 text-start"
+                        >
+                          <button
+                            @click="changeParticipantMetadata('JP', 'position', i)"
+                            type="button"
+                            class="flex items-center justify-center w-full gap-1 p-2 text-sm border border-gray-200 rounded-md focus:ring-0"
+                            :class="participant[i].metadata.position === 'JP' ? 'text-white bg-blue-600' : 'text-gray-900 bg-white'"
                           >
-                            <input
-                              x-model="participant[i].metadata.position"
-                              x-on:change="editParticipant(input.id)"
-                              value="JP"
-                              type="radio"
-                              class="w-5 h-5 transition-all border rounded-full appearance-none cursor-pointer peer border-slate-300 checked:border-slate-400"
-                              id="jp"
-                            />
-                            <span
-                              class="absolute w-3 h-3 transition-opacity duration-200 transform -translate-x-1/2 -translate-y-1/2 rounded-full opacity-0 bg-slate-800 peer-checked:opacity-100 top-1/2 left-1/2"
+                            <template
+                              x-if="participant[i].metadata.position === 'JP'"
                             >
-                            </span>
-                          </label>
-                          <label
-                            class="ml-2 text-sm cursor-pointer text-slate-600"
-                            for="jp"
-                            >JP</label
-                          >
-                        </div>
+                              <span class="text-white">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  viewBox="0 0 24 24"
+                                  fill="currentColor"
+                                  class="size-5"
+                                >
+                                  <path
+                                    fill-rule="evenodd"
+                                    d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z"
+                                    clip-rule="evenodd"
+                                  />
+                                </svg>
+                              </span>
+                            </template>
 
-                        <div class="inline-flex items-center">
-                          <label
-                            class="relative flex items-center cursor-pointer"
-                            for="t12"
+                            JP
+                          </button>
+                          <button
+                            @click="changeParticipantMetadata('T12', 'position', i)"
+                            type="button"
+                            class="flex items-center justify-center w-full gap-1 p-2 text-sm border border-gray-200 rounded-md focus:ring-0"
+                            :class="participant[i].metadata.position === 'T12' ? 'text-white bg-blue-600' : 'text-gray-900 bg-white'"
                           >
-                            <input
-                              x-model="participant[i].metadata.position"
-                              x-on:change="editParticipant(input.id)"
-                              value="T12"
-                              type="radio"
-                              class="w-5 h-5 transition-all border rounded-full appearance-none cursor-pointer peer border-slate-300 checked:border-slate-400"
-                              id="t12"
-                            />
-                            <span
-                              class="absolute w-3 h-3 transition-opacity duration-200 transform -translate-x-1/2 -translate-y-1/2 rounded-full opacity-0 bg-slate-800 peer-checked:opacity-100 top-1/2 left-1/2"
+                            <template
+                              x-if="participant[i].metadata.position === 'T12'"
                             >
-                            </span>
-                          </label>
-                          <label
-                            class="ml-2 text-sm cursor-pointer text-slate-600"
-                            for="t12"
-                            >T12</label
-                          >
-                        </div>
+                              <span class="text-white">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  viewBox="0 0 24 24"
+                                  fill="currentColor"
+                                  class="size-5"
+                                >
+                                  <path
+                                    fill-rule="evenodd"
+                                    d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z"
+                                    clip-rule="evenodd"
+                                  />
+                                </svg>
+                              </span>
+                            </template>
 
-                        <div class="inline-flex items-center">
-                          <label
-                            class="relative flex items-center cursor-pointer"
-                            for="support"
+                            T12
+                          </button>
+                          <button
+                            @click="changeParticipantMetadata('SUPPORT', 'position', i)"
+                            type="button"
+                            class="flex items-center justify-center w-full gap-1 p-2 text-sm border border-gray-200 rounded-md focus:ring-0"
+                            :class="participant[i].metadata.position === 'SUPPORT' ? 'text-white bg-blue-600' : 'text-gray-900 bg-white'"
                           >
-                            <input
-                              x-model="participant[i].metadata.position"
-                              x-on:change="editParticipant(input.id)"
-                              value="SUPPORT"
-                              type="radio"
-                              class="w-5 h-5 transition-all border rounded-full appearance-none cursor-pointer peer border-slate-300 checked:border-slate-400"
-                              id="support"
-                            />
-                            <span
-                              class="absolute w-3 h-3 transition-opacity duration-200 transform -translate-x-1/2 -translate-y-1/2 rounded-full opacity-0 bg-slate-800 peer-checked:opacity-100 top-1/2 left-1/2"
+                            <template
+                              x-if="participant[i].metadata.position === 'SUPPORT'"
                             >
-                            </span>
-                          </label>
-                          <label
-                            class="ml-2 text-sm cursor-pointer text-slate-600"
-                            for="support"
-                            >Support</label
-                          >
+                              <span class="text-white">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  viewBox="0 0 24 24"
+                                  fill="currentColor"
+                                  class="size-5"
+                                >
+                                  <path
+                                    fill-rule="evenodd"
+                                    d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z"
+                                    clip-rule="evenodd"
+                                  />
+                                </svg>
+                              </span>
+                            </template>
+
+                            Support
+                          </button>
                         </div>
                       </div>
                     </template>
@@ -222,31 +246,29 @@
                 </template>
               </div>
 
-              <template x-if="order.category !== 'FORMASI_PIRAMID'">
-                <button
-                  x-on:click="addNewParticipant"
-                  class="flex items-center justify-center w-full px-3 py-2 text-sm text-gray-500 border border-gray-300 border-dashed rounded-md hover:bg-gray-200"
-                >
-                  <span>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke-width="1.5"
-                      stroke="currentColor"
-                      class="w-4 h-4"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M12 4.5v15m7.5-7.5h-15"
-                      />
-                    </svg>
-                  </span>
+              <button
+                x-on:click="addNewParticipant"
+                class="flex items-center justify-center w-full px-3 py-2 text-sm text-gray-500 border border-gray-300 border-dashed rounded-md hover:bg-gray-200"
+              >
+                <span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    class="w-4 h-4"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M12 4.5v15m7.5-7.5h-15"
+                    />
+                  </svg>
+                </span>
 
-                  Tambah Peserta
-                </button>
-              </template>
+                Tambah Peserta
+              </button>
 
               <button
                 x-on:click="submit"

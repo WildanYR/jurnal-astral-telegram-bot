@@ -165,13 +165,11 @@ const generateOrderResultTemplate = (
 
   const orderAppLink = getOrderAppLink(id);
 
-  return `
-    <blockquote>update ${timeStr} WIB</blockquote>\n
-    <strong>${title}</strong>\n\n
-    ${description ? `${description}\n\n` : ""}
-    ${list ? `${list}\n\n` : "<i>Belum Ada List</i>\n\n"}
-    Link Pendaftaran:\n${orderAppLink}
-  `;
+  return `<blockquote>update ${timeStr} WIB</blockquote>\n<strong>${title}</strong>\n\n${
+    description ? `${description}\n\n` : ""
+  }${
+    list ? `${list}\n\n` : "<i>Belum Ada List</i>\n\n"
+  }Link Pendaftaran:\n${orderAppLink}`;
 };
 
 export const orderResultDefault = async (order: Order) => {
@@ -259,7 +257,7 @@ export const orderResultDragonRing = async (order: Order) => {
   );
 };
 
-export const orderResultFormasiKristal = async (order: Order) => {
+export const orderResultFormasiPiramid = async (order: Order) => {
   let order_list_text = "";
 
   if (order.order_list.length) {
@@ -291,9 +289,10 @@ export const orderResultFormasiKristal = async (order: Order) => {
       const t12Need = 9 - t12.length;
 
       for (let i = 0; i < t12Need; i++) {
+        console.log({ i, sl: support.length, s: support, t12 });
         if (support.length === 0) break;
-        t12.push(support[i]);
-        support.shift();
+        const sp = support.shift();
+        t12.push(sp);
       }
     }
 
@@ -310,7 +309,7 @@ export const orderResultFormasiKristal = async (order: Order) => {
       }
     }
 
-    order_list_text += "BARA: \n\n";
+    order_list_text += "\nBARA: \n";
 
     order_list_text += "\nT12:\n";
     if (t12.length) {
@@ -323,7 +322,7 @@ export const orderResultFormasiKristal = async (order: Order) => {
       }
     }
 
-    order_list_text += "NIPUL: \n\n";
+    order_list_text += "\nNIPUL: \n";
 
     order_list_text += "\nSupport:\n";
     if (support.length) {
@@ -364,7 +363,7 @@ const generateOrderResultText = async (order_id: number) => {
     if (order.category === "DRAGON_RING")
       return await orderResultDragonRing(order);
     if (order.category === "FORMASI_PIRAMID")
-      return await orderResultFormasiKristal(order);
+      return await orderResultFormasiPiramid(order);
   }
 
   return "List tidak ditemukan";
