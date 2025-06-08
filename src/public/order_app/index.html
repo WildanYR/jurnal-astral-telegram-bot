@@ -247,6 +247,7 @@
               </div>
 
               <button
+                x-show="!order.stop"
                 x-on:click="addNewParticipant"
                 class="flex items-center justify-center w-full px-3 py-2 text-sm text-gray-500 border border-gray-300 border-dashed rounded-md hover:bg-gray-200"
               >
@@ -270,24 +271,79 @@
                 Tambah Peserta
               </button>
 
-              <button
-                x-on:click="submit"
-                class="flex items-center justify-center w-full gap-2 px-3 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700"
-              >
-                <span x-show="loadingSubmit" id="submit-btn-loading">
-                  <svg
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="currentColor"
-                    class="w-4 h-4 animate-spin"
+              <template x-if="!order.stop">
+                <div class="space-y-3">
+                  <button
+                    x-on:click="submit"
+                    class="flex items-center justify-center w-full gap-2 px-3 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700"
                   >
-                    <path
-                      d="M10.72,19.9a8,8,0,0,1-6.5-9.79A7.77,7.77,0,0,1,10.4,4.16a8,8,0,0,1,9.49,6.52A1.54,1.54,0,0,0,21.38,12h.13a1.37,1.37,0,0,0,1.38-1.54,11,11,0,1,0-12.7,12.39A1.54,1.54,0,0,0,12,21.34h0A1.47,1.47,0,0,0,10.72,19.9Z"
-                    />
-                  </svg>
-                </span>
-                Submit
-              </button>
+                    <span x-show="loadingSubmit" id="submit-btn-loading">
+                      <svg
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="currentColor"
+                        class="w-4 h-4 animate-spin"
+                      >
+                        <path
+                          d="M10.72,19.9a8,8,0,0,1-6.5-9.79A7.77,7.77,0,0,1,10.4,4.16a8,8,0,0,1,9.49,6.52A1.54,1.54,0,0,0,21.38,12h.13a1.37,1.37,0,0,0,1.38-1.54,11,11,0,1,0-12.7,12.39A1.54,1.54,0,0,0,12,21.34h0A1.47,1.47,0,0,0,10.72,19.9Z"
+                        />
+                      </svg>
+                    </span>
+                    Submit
+                  </button>
+
+                  <button
+                    :disabled="!registered"
+                    x-on:click="cancelRegister"
+                    class="flex items-center justify-center w-full gap-2 px-3 py-2 text-red-700 bg-red-100 rounded-md hover:bg-red-200 active:bg-red-300 disabled:cursor-not-allowed disabled:bg-red-50 disabled:text-red-300"
+                  >
+                    <span x-show="loadingCancel" id="cancel-btn-loading">
+                      <svg
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="currentColor"
+                        class="w-4 h-4 animate-spin"
+                      >
+                        <path
+                          d="M10.72,19.9a8,8,0,0,1-6.5-9.79A7.77,7.77,0,0,1,10.4,4.16a8,8,0,0,1,9.49,6.52A1.54,1.54,0,0,0,21.38,12h.13a1.37,1.37,0,0,0,1.38-1.54,11,11,0,1,0-12.7,12.39A1.54,1.54,0,0,0,12,21.34h0A1.47,1.47,0,0,0,10.72,19.9Z"
+                        />
+                      </svg>
+                    </span>
+                    Batalkan Pendaftaran
+                  </button>
+                  <div
+                    class="p-4 italic text-gray-800 border-l-4 border-gray-300 rounded-r-lg bg-gray-50"
+                  >
+                    <p class="text-sm leading-relaxed">
+                      gunakan tombol di atas untuk membatalkan semua
+                      pendaftaran.
+                    </p>
+                    <p class="mt-2 text-sm leading-relaxed">
+                      Jika hanya ingin menghapus satu peserta saja, bisa dengan
+                      menekan icon delete di samping peserta yang ingin dihapus,
+                      kemudian submit perubahan Anda.
+                    </p>
+                  </div>
+                </div>
+              </template>
+
+              <template x-if="order.stop">
+                <div>
+                  <h2
+                    class="mb-2 text-xl font-extrabold text-center text-red-600"
+                  >
+                    Pendaftaran Telah Ditutup
+                  </h2>
+                  <p class="mb-2 text-sm text-center text-gray-600">
+                    Mohon maaf, periode pendaftaran untuk kegiatan ini telah
+                    berakhir.
+                  </p>
+                  <p class="text-sm text-center text-gray-600">
+                    bagi yang belum sempat mendaftar bisa mengikuti agenda
+                    kegiatan pada hari yang lain
+                  </p>
+                </div>
+              </template>
 
               <template x-if="!!error">
                 <div id="error">

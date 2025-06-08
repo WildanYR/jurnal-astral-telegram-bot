@@ -36,6 +36,7 @@ document.addEventListener("alpine:init", () => {
       id: "",
       title: "",
       category: "",
+      stop: false,
     },
     participant: [{ id: null, value: "", status: "add", metadata: null }],
     participantDelId: [],
@@ -45,6 +46,8 @@ document.addEventListener("alpine:init", () => {
       username: "",
     },
     loadingSubmit: false,
+    loadingCancel: false,
+    registered: false,
     error: "",
     error_header: "",
 
@@ -84,6 +87,7 @@ document.addEventListener("alpine:init", () => {
           }
           this.order.title = data.title;
           this.order.category = data.category;
+          this.order.stop = !!data.stop;
           if (data.category === "DRAGON_RING") {
             this.participant[0].metadata = {
               isAvallon: "false",
@@ -104,6 +108,7 @@ document.addEventListener("alpine:init", () => {
             throw data.error;
           }
           if (data?.length) {
+            this.registered = true;
             this.participant = data.map((item) => {
               let metadata = null;
               if (item.metadata) {
@@ -251,6 +256,35 @@ document.addEventListener("alpine:init", () => {
         })
         .finally(() => {
           this.loadingSubmit = false;
+          this.registered = true;
+        });
+    },
+    cancelRegister() {
+      this.loadingCancel = true;
+      fetch(`/order/${this.order.id}/cancel/${this.user.id}`)
+        .then((response) => {
+          return response.json();
+        })
+        .then((data) => {
+          if (serverError) {
+            this.error = data.message;
+          } else {
+            this.state = "success";
+            window.Telegram.WebApp.showAlert(
+              "Pendaftaran berhasil dibatalkan",
+              () => {
+                window.Telegram.WebApp.close();
+              }
+            );
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          this.error = error.toString();
+        })
+        .finally(() => {
+          this.loadingCancel = false;
+          this.registered = false;
         });
     },
   }));

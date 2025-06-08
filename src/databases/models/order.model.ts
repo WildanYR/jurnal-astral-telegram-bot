@@ -14,6 +14,7 @@ interface IOrderAttributes {
   name: string;
   description?: string;
   category?: string;
+  stop?: boolean;
 }
 
 interface ICreateOrderAttributes extends Optional<IOrderAttributes, "id"> {}
@@ -41,6 +42,10 @@ export class Order extends Model<IOrderAttributes, ICreateOrderAttributes> {
         type: DataTypes.STRING,
         defaultValue: "DEFAULT",
       },
+      stop: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
     };
   }
 
@@ -66,6 +71,7 @@ export class Order extends Model<IOrderAttributes, ICreateOrderAttributes> {
   declare name: string;
   declare description: string;
   declare category: OrderCategory;
+  declare stop: boolean;
   declare created_at: Date;
   declare updated_at: Date;
 

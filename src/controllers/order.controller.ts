@@ -16,6 +16,7 @@ import {
   OrderMetadataDragonRing,
   OrderMetadataFormasiPiramid,
 } from "../types/order_metadata.type";
+import { sequelize } from "../databases";
 
 let timer_id: NodeJS.Timeout;
 
@@ -145,7 +146,7 @@ export const orderCreateDone = async (
 
   await bot.sendMessage(
     chat_id,
-    `Anda dapat membagikan hasil list dengan command\n\n<strong>Data List Terbaru</strong>\n<code>/orderresult_${order.id}</code>\n<code>/orderresult_${order.id}@${telegramConfig.username}</code> untuk grup\n\n<strong>Auto Update Data</strong>\n<code>/orderresultrt_${order.id}</code>\n<code>/orderresultrt_${order.id}@${telegramConfig.username}</code> untuk grup\n\n<strong>Stop Auto Update Data</strong>\n<code>/orderresultrtstop_${order.id}</code>\n<code>/orderresultrtstop_${order.id}@${telegramConfig.username}</code> untuk grup\n<strong>Stop Semua Auto Update Data</strong>\n<code>/orderresultrtstopall_${order.id}</code>\nNote kirim ke grup:\n- bot harus menjadi member dari grup\n- Hanya yang sudah login sebagai Admin dari bot ini /auth yang bisa mengirim ke grup`,
+    `Anda dapat membagikan hasil list dengan command\n\n<strong>Data List Terbaru</strong>\n<code>/orderresult_${order.id}</code>\n<code>/orderresult_${order.id}@${telegramConfig.username}</code> untuk grup\n\n<strong>Auto Update Data</strong>\n<code>/orderresultrt_${order.id}</code>\n<code>/orderresultrt_${order.id}@${telegramConfig.username}</code> untuk grup\n\n<strong>Stop Auto Update Data</strong>\n<code>/orderresultrtstop_${order.id}</code>\n<code>/orderresultrtstop_${order.id}@${telegramConfig.username}</code> untuk grup\n\nNote kirim ke grup:\n- bot harus menjadi member dari grup\n- Hanya yang sudah login sebagai Admin dari bot ini /auth yang bisa mengirim ke grup`,
     { parse_mode: "HTML" }
   );
 
@@ -519,21 +520,29 @@ export const orderStopResultListener = async (
     return;
   }
 
-  let condition: any = { chat_id, order_id };
-  if (chat_thread_id) {
-    condition.chat_thread_id = chat_thread_id;
-  }
-
-  const orderChatUpdate = await OrderChatUpdate.findOne({ where: condition });
-
-  if (orderChatUpdate) {
-    await orderChatUpdate.destroy();
+  const transaction = await sequelize.transaction();
+  try {
+    await OrderChatUpdate.destroy({ where: { order_id }, transaction });
+    await Order.update(
+      { stop: true },
+      { where: { id: order_id }, transaction }
+    );
+    await transaction.commit();
+  } catch (error: any) {
+    console.log("Error ", error.toString());
+    await transaction.rollback();
     await bot.sendMessage(
       chat_id,
-      "Pendaftaran selesai ditampilkan secara langsung",
+      "Terjadi kesalahan saat menghentikan pendaftaran. silahkan coba lagi setelah 1 menit",
       { message_thread_id: chat_thread_id }
     );
   }
+
+  await bot.sendMessage(
+    chat_id,
+    "Pendaftaran selesai ditampilkan secara langsung",
+    { message_thread_id: chat_thread_id }
+  );
 
   if (command_message_id) {
     try {
@@ -544,32 +553,10 @@ export const orderStopResultListener = async (
   }
 };
 
-export const orderStopAllResultListener = async (
-  bot: TelegramBot,
-  chat_id: number,
-  order_id?: number
-) => {
-  if (!order_id) {
-    await bot.sendMessage(chat_id, "Order Id Invalid");
-    return;
-  }
-
-  const orderChatCount = await OrderChatUpdate.count({ where: { order_id } });
-
-  if (!orderChatCount) {
-    await bot.sendMessage(chat_id, "Tidak ada update realtime yang berjalan");
-    return;
-  }
-
-  await OrderChatUpdate.destroy({ where: { order_id } });
-
-  await bot.sendMessage(chat_id, "Update realtime telah dihentikan");
-};
-
 export const orderGetTitle = async (order_id: number) => {
   const order = await Order.findOne({
     where: { id: order_id },
-    attributes: ["id", "name", "category"],
+    attributes: ["id", "name", "category", "stop"],
   });
 
   if (!order) {
@@ -581,12 +568,22 @@ export const orderGetTitle = async (order_id: number) => {
   return {
     title: order.name,
     category: order.category,
+    stop: order.stop,
   };
 };
 
 export const orderUserGetData = async (order_id: number, user_id: number) => {
   const orders = await OrderList.findAll({ where: { order_id, user_id } });
   return orders;
+};
+
+export const orderUserCancel = async (
+  bot: TelegramBot,
+  order_id: number,
+  user_id: number
+) => {
+  await OrderList.destroy({ where: { order_id, user_id } });
+  await orderListRealtimeUpdate(bot, order_id);
 };
 
 interface IOrderUserUpdateData {

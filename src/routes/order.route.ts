@@ -3,6 +3,7 @@ import path from "path";
 import {
   orderGetTitle,
   orderListAdd,
+  orderUserCancel,
   orderUserGetData,
   orderUserUpdateData,
 } from "../controllers/order.controller";
@@ -34,6 +35,15 @@ export const initOrderRouter = (bot: TelegramBot) => {
       parseInt(req.params.userId)
     );
     res.json(orders);
+  });
+
+  router.get("/:id/cancel/:userId", async (req, res) => {
+    await orderUserCancel(
+      bot,
+      parseInt(req.params.id),
+      parseInt(req.params.userId)
+    );
+    res.json({ status: "OK", message: "ok" });
   });
 
   router.post("/", async (req, res) => {
