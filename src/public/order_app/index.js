@@ -261,8 +261,10 @@ document.addEventListener("alpine:init", () => {
     },
     cancelRegister() {
       this.loadingCancel = true;
+      let serverError = false;
       fetch(`/order/${this.order.id}/cancel/${this.user.id}`)
         .then((response) => {
+          serverError = !response.ok;
           return response.json();
         })
         .then((data) => {
